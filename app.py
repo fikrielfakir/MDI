@@ -44,7 +44,6 @@ def main():
         "Perceptron",
         "Perceptron Multicouche",
         "Prédiction Iris",
-        "Reconnaissance d'Images",
         "Entraînement sur Iris",
         "Entraînement sur MNIST",
         "Historique d'Entraînement"
@@ -63,18 +62,15 @@ def main():
         show_mlp()
     
     with tabs[4]:
-        show_iris_prediction()
+        show_iris_combined()
     
     with tabs[5]:
-        show_image_recognition()
-    
-    with tabs[6]:
         show_iris_training()
     
-    with tabs[7]:
+    with tabs[6]:
         show_mnist_training()
     
-    with tabs[8]:
+    with tabs[7]:
         show_training_history()
 
 
@@ -745,11 +741,33 @@ def show_mlp():
         """)
 
 
-def show_iris_prediction():
-    st.header("Prédiction des Espèces d'Iris")
+def show_iris_combined():
+    st.header("Prédiction et Reconnaissance Iris")
     
     st.markdown("""
-    ## Prédire les Espèces d'Iris
+    ## Classification des Espèces d'Iris
+    
+    Cette section combine la prédiction basée sur les mesures et la reconnaissance d'images pour classifier les fleurs d'iris.
+    Choisissez votre méthode préférée ci-dessous.
+    """)
+    
+    mode_tabs = st.tabs([
+        "Prédiction par Mesures",
+        "Reconnaissance d'Images"
+    ])
+    
+    with mode_tabs[0]:
+        show_iris_prediction_content()
+    
+    with mode_tabs[1]:
+        show_image_recognition_content()
+
+
+def show_iris_prediction_content():
+    st.subheader("Prédiction des Espèces d'Iris")
+    
+    st.markdown("""
+    ### Prédire les Espèces d'Iris
     
     Utilisez un réseau de neurones entraîné pour classifier les fleurs d'iris en fonction de leurs mesures.
     Choisissez entre la saisie de mesure unique, le téléchargement CSV par lot ou le téléchargement multi-images pour la classification.
@@ -1096,11 +1114,11 @@ def show_iris_prediction():
             """)
 
 
-def show_image_recognition():
-    st.header("Reconnaissance d'Images Iris")
+def show_image_recognition_content():
+    st.subheader("Reconnaissance d'Images Iris")
     
     st.markdown("""
-    ## Classification d'Iris Basée sur l'Image
+    ### Classification d'Iris Basée sur l'Image
     
     Cette fonctionnalité vous permet de classifier des fleurs d'iris directement à partir d'images en utilisant des réseaux de neurones.
     Le système extrait les caractéristiques visuelles (couleurs, formes, textures) des images et utilise un
