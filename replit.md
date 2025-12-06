@@ -10,6 +10,11 @@ The project includes:
 - Interactive Streamlit-based web interface for visualization and experimentation
 - Real-world training examples using the Iris dataset
 - Data preprocessing and evaluation utilities
+- **Iris Species Prediction** with three input modes:
+  - Single measurement prediction with confidence display
+  - CSV batch upload (format: Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species)
+  - Multi-image upload with measurement input forms
+- **Enhanced educational content** with tabbed explanations of neural network concepts
 
 The application is designed to help users understand how neural networks work at a fundamental level by implementing each component from first principles.
 
