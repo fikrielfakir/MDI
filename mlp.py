@@ -490,6 +490,25 @@ class MLP:
         lines.append("="*50)
         
         return "\n".join(lines)
+    
+    @classmethod
+    def from_saved_weights(cls, layer_sizes, activation, weights, biases):
+        """
+        Create an MLP instance from saved weights.
+        
+        Args:
+            layer_sizes: Network architecture
+            activation: Activation function name
+            weights: Dict of weight matrices
+            biases: Dict of bias vectors
+            
+        Returns:
+            MLP: Initialized model with loaded weights
+        """
+        model = cls(layer_sizes=layer_sizes, activation=activation)
+        model.weights = weights
+        model.biases = biases
+        return model
 
 
 def solve_xor_with_mlp():

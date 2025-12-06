@@ -14,8 +14,9 @@ from data_utils import (load_iris_dataset, load_mnist_dataset, get_mnist_sample_
                         compute_metrics, format_confusion_matrix, one_hot_encode)
 from db_utils import (init_database, import_iris_from_csv, get_iris_sample_count,
                       save_training_run, get_training_history, get_training_run_details,
-                      delete_training_run)
+                      delete_training_run, save_trained_model, load_trained_model, get_saved_model_names)
 import os
+from sklearn.preprocessing import StandardScaler
 
 st.set_page_config(
     page_title="Deep Learning from Scratch",
@@ -34,6 +35,7 @@ def main():
         "Activation Functions", 
         "Perceptron",
         "Multi-Layer Perceptron",
+        "Iris Prediction",
         "Train on Iris Dataset",
         "Train on MNIST",
         "Training History"
@@ -52,12 +54,15 @@ def main():
         show_mlp()
     
     with tabs[4]:
-        show_iris_training()
+        show_iris_prediction()
     
     with tabs[5]:
-        show_mnist_training()
+        show_iris_training()
     
     with tabs[6]:
+        show_mnist_training()
+    
+    with tabs[7]:
         show_training_history()
 
 
@@ -523,6 +528,143 @@ def show_mlp():
         The MLP with just **one hidden layer** successfully learns XOR! 
         This demonstrates the power of hidden layers in learning non-linear patterns.
         """)
+
+
+def show_iris_prediction():
+    st.header("Iris Species Prediction")
+    
+    st.markdown("""
+    ## Predict Iris Species
+    
+    Use a trained neural network to classify iris flowers based on their measurements,
+    or upload an image for visual classification.
+    """)
+    
+    saved_models = get_saved_model_names()
+    iris_models = [m for m in saved_models if 'iris' in m[0].lower()]
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.subheader("Train & Save Model")
+        
+        if st.button("Train Iris Classifier", type="primary"):
+            with st.spinner("Training model..."):
+                X_train, X_test, y_train, y_test, feature_names, class_names = load_iris_dataset(source='sklearn')
+                
+                scaler = StandardScaler()
+                X_train_scaled = scaler.fit_transform(X_train)
+                X_test_scaled = scaler.transform(X_test)
+                
+                mlp = MLP(
+                    layer_sizes=[4, 16, 8, 3],
+                    learning_rate=0.01,
+                    activation='relu',
+                    weight_init='he'
+                )
+                
+                mlp.fit(X_train_scaled, y_train, epochs=500, batch_size=16, verbose=False)
+                
+                y_pred = mlp.predict(X_test_scaled)
+                accuracy = np.mean(y_pred == y_test)
+                
+                save_trained_model(
+                    name='iris_classifier',
+                    model=mlp,
+                    scaler_mean=scaler.mean_,
+                    scaler_std=scaler.scale_,
+                    accuracy=accuracy,
+                    class_names=list(class_names)
+                )
+                
+                st.success(f"Model trained and saved! Test accuracy: {accuracy:.1%}")
+                st.rerun()
+        
+        if iris_models:
+            st.info(f"Saved model: {iris_models[0][0]} (Accuracy: {iris_models[0][1]:.1%})")
+        else:
+            st.warning("No trained model found. Click 'Train Iris Classifier' first.")
+    
+    with col2:
+        st.subheader("Iris Flower Images")
+        iris_images = sorted([f for f in os.listdir('attached_assets') if f.startswith('iris-') and f.endswith('.jpg')])
+        if iris_images[:6]:
+            cols = st.columns(3)
+            for idx, img_file in enumerate(iris_images[:6]):
+                with cols[idx % 3]:
+                    st.image(f"attached_assets/{img_file}", use_container_width=True)
+    
+    st.markdown("---")
+    
+    prediction_mode = st.radio(
+        "Prediction Mode:",
+        ["Measurement Input", "Image Upload"],
+        horizontal=True
+    )
+    
+    if prediction_mode == "Measurement Input":
+        st.subheader("Enter Flower Measurements")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            sepal_length = st.number_input("Sepal Length (cm)", min_value=0.0, max_value=10.0, value=5.1, step=0.1)
+        with col2:
+            sepal_width = st.number_input("Sepal Width (cm)", min_value=0.0, max_value=10.0, value=3.5, step=0.1)
+        with col3:
+            petal_length = st.number_input("Petal Length (cm)", min_value=0.0, max_value=10.0, value=1.4, step=0.1)
+        with col4:
+            petal_width = st.number_input("Petal Width (cm)", min_value=0.0, max_value=10.0, value=0.2, step=0.1)
+        
+        if st.button("Predict Species"):
+            model_data = load_trained_model('iris_classifier')
+            
+            if model_data is None:
+                st.error("No trained model found. Please train the model first.")
+            else:
+                mlp = MLP.from_saved_weights(
+                    layer_sizes=model_data['layer_sizes'],
+                    activation=model_data['activation'],
+                    weights=model_data['weights'],
+                    biases=model_data['biases']
+                )
+                
+                features = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+                
+                if model_data['scaler_mean'] is not None:
+                    features = (features - model_data['scaler_mean']) / model_data['scaler_std']
+                
+                prediction = mlp.predict(features)[0]
+                probabilities = mlp.predict_proba(features)[0]
+                
+                class_names = model_data['class_names']
+                predicted_class = class_names[prediction]
+                
+                st.success(f"**Predicted Species: {predicted_class}**")
+                
+                st.markdown("#### Confidence Scores:")
+                for i, (name, prob) in enumerate(zip(class_names, probabilities)):
+                    st.progress(float(prob), text=f"{name}: {prob:.1%}")
+    
+    else:
+        st.subheader("Upload Iris Flower Image")
+        st.info("Upload an image of an iris flower for classification. The model will analyze the image to identify the species.")
+        
+        uploaded_file = st.file_uploader("Choose an iris flower image", type=['jpg', 'jpeg', 'png'])
+        
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption="Uploaded Image", width=300)
+            
+            st.warning("Image-based classification requires a pre-trained CNN model. For this educational demo, the measurement-based prediction is recommended.")
+            
+            st.markdown("""
+            **Note:** Image classification for iris flowers would typically require:
+            - A Convolutional Neural Network (CNN)
+            - A large dataset of labeled iris flower images
+            - Transfer learning from models like ResNet or VGG
+            
+            The current implementation focuses on measurement-based classification using an MLP.
+            """)
 
 
 def show_iris_training():

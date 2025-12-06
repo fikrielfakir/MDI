@@ -97,8 +97,112 @@ def init_database():
         )
     ''')
     
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS saved_models (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL,
+            model_type TEXT NOT NULL,
+            layer_sizes TEXT NOT NULL,
+            activation TEXT NOT NULL,
+            weights_json TEXT NOT NULL,
+            biases_json TEXT NOT NULL,
+            scaler_mean TEXT,
+            scaler_std TEXT,
+            accuracy REAL,
+            class_names TEXT
+        )
+    ''')
+    
     conn.commit()
     conn.close()
+
+
+def save_trained_model(name, model, scaler_mean=None, scaler_std=None, accuracy=None, class_names=None):
+    """
+    Save a trained MLP model to the database.
+    
+    Args:
+        name: Unique name for the model
+        model: Trained MLP instance
+        scaler_mean: Mean values used for normalization
+        scaler_std: Std values used for normalization
+        accuracy: Model accuracy on test set
+        class_names: List of class names
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    weights_dict = {str(k): v.tolist() for k, v in model.weights.items()}
+    biases_dict = {str(k): v.tolist() for k, v in model.biases.items()}
+    
+    cursor.execute('DELETE FROM saved_models WHERE name = ?', (name,))
+    
+    cursor.execute('''
+        INSERT INTO saved_models 
+        (name, created_at, model_type, layer_sizes, activation, weights_json, biases_json,
+         scaler_mean, scaler_std, accuracy, class_names)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        name,
+        datetime.now().isoformat(),
+        'MLP',
+        json.dumps(model.layer_sizes),
+        model.activation_name,
+        json.dumps(weights_dict),
+        json.dumps(biases_dict),
+        json.dumps(scaler_mean.tolist()) if scaler_mean is not None else None,
+        json.dumps(scaler_std.tolist()) if scaler_std is not None else None,
+        accuracy,
+        json.dumps(class_names) if class_names else None
+    ))
+    
+    conn.commit()
+    conn.close()
+
+
+def load_trained_model(name):
+    """
+    Load a trained model from the database.
+    
+    Args:
+        name: Name of the saved model
+        
+    Returns:
+        dict with model info or None if not found
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM saved_models WHERE name = ?', (name,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row is None:
+        return None
+    
+    return {
+        'name': row['name'],
+        'created_at': row['created_at'],
+        'layer_sizes': json.loads(row['layer_sizes']),
+        'activation': row['activation'],
+        'weights': {int(k): np.array(v) for k, v in json.loads(row['weights_json']).items()},
+        'biases': {int(k): np.array(v) for k, v in json.loads(row['biases_json']).items()},
+        'scaler_mean': np.array(json.loads(row['scaler_mean'])) if row['scaler_mean'] else None,
+        'scaler_std': np.array(json.loads(row['scaler_std'])) if row['scaler_std'] else None,
+        'accuracy': row['accuracy'],
+        'class_names': json.loads(row['class_names']) if row['class_names'] else None
+    }
+
+
+def get_saved_model_names():
+    """Get list of all saved model names."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT name, accuracy, created_at FROM saved_models ORDER BY created_at DESC')
+    rows = cursor.fetchall()
+    conn.close()
+    return [(row['name'], row['accuracy'], row['created_at']) for row in rows]
 
 
 def import_iris_from_csv(csv_path):
