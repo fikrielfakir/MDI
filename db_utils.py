@@ -114,6 +114,52 @@ def init_database():
         )
     ''')
     
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS iris_reference_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            species_id INTEGER NOT NULL,
+            species_name TEXT NOT NULL,
+            image_data BLOB,
+            image_path TEXT,
+            filename TEXT,
+            created_at TEXT NOT NULL,
+            description TEXT
+        )
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS iris_image_features (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference_image_id INTEGER,
+            species_id INTEGER NOT NULL,
+            species_name TEXT NOT NULL,
+            feature_vector TEXT NOT NULL,
+            color_histogram TEXT,
+            shape_descriptors TEXT,
+            feature_version TEXT DEFAULT 'v1',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (reference_image_id) REFERENCES iris_reference_images(id)
+        )
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS iris_image_models (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL,
+            model_type TEXT NOT NULL,
+            layer_sizes TEXT NOT NULL,
+            activation TEXT NOT NULL,
+            weights_json TEXT NOT NULL,
+            biases_json TEXT NOT NULL,
+            feature_scaler_mean TEXT,
+            feature_scaler_std TEXT,
+            accuracy REAL,
+            num_reference_images INTEGER,
+            feature_version TEXT
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -592,6 +638,281 @@ def get_model_configs():
         })
     
     return configs
+
+
+def save_iris_reference_image(species_id, species_name, image_data=None, image_path=None, 
+                               filename=None, description=None):
+    """
+    Save a reference image for an iris species.
+    
+    Args:
+        species_id: 0=setosa, 1=versicolor, 2=virginica
+        species_name: Full species name
+        image_data: Binary image data (optional)
+        image_path: Path to saved image file (optional)
+        filename: Original filename
+        description: Optional description
+        
+    Returns:
+        int: ID of the saved reference image
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO iris_reference_images 
+        (species_id, species_name, image_data, image_path, filename, created_at, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        species_id,
+        species_name,
+        image_data,
+        image_path,
+        filename,
+        datetime.now().isoformat(),
+        description
+    ))
+    
+    conn.commit()
+    image_id = cursor.lastrowid
+    conn.close()
+    
+    return image_id
+
+
+def get_iris_reference_images(species_id=None):
+    """
+    Get reference images from the database.
+    
+    Args:
+        species_id: Optional filter by species (0, 1, or 2)
+        
+    Returns:
+        list: List of reference image records
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    if species_id is not None:
+        cursor.execute('''
+            SELECT id, species_id, species_name, image_path, filename, created_at, description
+            FROM iris_reference_images
+            WHERE species_id = ?
+            ORDER BY created_at DESC
+        ''', (species_id,))
+    else:
+        cursor.execute('''
+            SELECT id, species_id, species_name, image_path, filename, created_at, description
+            FROM iris_reference_images
+            ORDER BY species_id, created_at DESC
+        ''')
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
+
+
+def get_reference_image_count():
+    """Get count of reference images per species."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT species_id, species_name, COUNT(*) as count
+        FROM iris_reference_images
+        GROUP BY species_id
+        ORDER BY species_id
+    ''')
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return {row['species_name']: row['count'] for row in rows}
+
+
+def delete_iris_reference_image(image_id):
+    """Delete a reference image and its associated features."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('DELETE FROM iris_image_features WHERE reference_image_id = ?', (image_id,))
+    cursor.execute('DELETE FROM iris_reference_images WHERE id = ?', (image_id,))
+    
+    conn.commit()
+    deleted = cursor.rowcount > 0
+    conn.close()
+    
+    return deleted
+
+
+def save_iris_image_features(reference_image_id, species_id, species_name, 
+                             feature_vector, color_histogram=None, shape_descriptors=None):
+    """
+    Save extracted features from an iris image.
+    
+    Args:
+        reference_image_id: ID of the reference image (or None for new uploads)
+        species_id: Species ID (0, 1, 2)
+        species_name: Species name
+        feature_vector: NumPy array of extracted features
+        color_histogram: Optional color histogram data
+        shape_descriptors: Optional shape descriptor data
+        
+    Returns:
+        int: ID of the saved feature record
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO iris_image_features 
+        (reference_image_id, species_id, species_name, feature_vector, 
+         color_histogram, shape_descriptors, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        reference_image_id,
+        species_id,
+        species_name,
+        json.dumps(feature_vector.tolist() if isinstance(feature_vector, np.ndarray) else feature_vector),
+        json.dumps(color_histogram.tolist() if isinstance(color_histogram, np.ndarray) else color_histogram) if color_histogram is not None else None,
+        json.dumps(shape_descriptors) if shape_descriptors else None,
+        datetime.now().isoformat()
+    ))
+    
+    conn.commit()
+    feature_id = cursor.lastrowid
+    conn.close()
+    
+    return feature_id
+
+
+def get_all_iris_image_features():
+    """
+    Get all stored image features for training.
+    
+    Returns:
+        tuple: (X, y, species_names) where X is feature matrix, y is labels
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT feature_vector, species_id, species_name
+        FROM iris_image_features
+        ORDER BY species_id
+    ''')
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    if not rows:
+        return None, None, None
+    
+    X = np.array([json.loads(row['feature_vector']) for row in rows])
+    y = np.array([row['species_id'] for row in rows])
+    species_names = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
+    
+    return X, y, species_names
+
+
+def get_feature_count():
+    """Get count of features per species."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT species_id, species_name, COUNT(*) as count
+        FROM iris_image_features
+        GROUP BY species_id
+        ORDER BY species_id
+    ''')
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return {row['species_name']: row['count'] for row in rows}
+
+
+def save_iris_image_model(name, model, feature_scaler_mean=None, feature_scaler_std=None, 
+                          accuracy=None, num_reference_images=None, feature_version='v1'):
+    """
+    Save a trained iris image classifier model.
+    
+    Args:
+        name: Unique name for the model
+        model: Trained MLP instance
+        feature_scaler_mean: Mean for feature normalization
+        feature_scaler_std: Std for feature normalization
+        accuracy: Model accuracy
+        num_reference_images: Number of images used for training
+        feature_version: Version of feature extraction used
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    weights_dict = {str(k): v.tolist() for k, v in model.weights.items()}
+    biases_dict = {str(k): v.tolist() for k, v in model.biases.items()}
+    
+    cursor.execute('DELETE FROM iris_image_models WHERE name = ?', (name,))
+    
+    cursor.execute('''
+        INSERT INTO iris_image_models 
+        (name, created_at, model_type, layer_sizes, activation, weights_json, biases_json,
+         feature_scaler_mean, feature_scaler_std, accuracy, num_reference_images, feature_version)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        name,
+        datetime.now().isoformat(),
+        'IrisImageMLP',
+        json.dumps(model.layer_sizes),
+        model.activation_name,
+        json.dumps(weights_dict),
+        json.dumps(biases_dict),
+        json.dumps(feature_scaler_mean.tolist()) if feature_scaler_mean is not None else None,
+        json.dumps(feature_scaler_std.tolist()) if feature_scaler_std is not None else None,
+        accuracy,
+        num_reference_images,
+        feature_version
+    ))
+    
+    conn.commit()
+    conn.close()
+
+
+def load_iris_image_model(name='iris_image_classifier'):
+    """
+    Load a trained iris image classifier model.
+    
+    Args:
+        name: Name of the saved model
+        
+    Returns:
+        dict with model info or None if not found
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM iris_image_models WHERE name = ?', (name,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row is None:
+        return None
+    
+    return {
+        'name': row['name'],
+        'created_at': row['created_at'],
+        'layer_sizes': json.loads(row['layer_sizes']),
+        'activation': row['activation'],
+        'weights': {int(k): np.array(v) for k, v in json.loads(row['weights_json']).items()},
+        'biases': {int(k): np.array(v) for k, v in json.loads(row['biases_json']).items()},
+        'feature_scaler_mean': np.array(json.loads(row['feature_scaler_mean'])) if row['feature_scaler_mean'] else None,
+        'feature_scaler_std': np.array(json.loads(row['feature_scaler_std'])) if row['feature_scaler_std'] else None,
+        'accuracy': row['accuracy'],
+        'num_reference_images': row['num_reference_images'],
+        'feature_version': row['feature_version']
+    }
 
 
 init_database()

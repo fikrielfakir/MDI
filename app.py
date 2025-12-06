@@ -16,9 +16,15 @@ from data_utils import (load_iris_dataset, load_mnist_dataset, get_mnist_sample_
                         compute_metrics, format_confusion_matrix, one_hot_encode)
 from db_utils import (init_database, import_iris_from_csv, get_iris_sample_count,
                       save_training_run, get_training_history, get_training_run_details,
-                      delete_training_run, save_trained_model, load_trained_model, get_saved_model_names)
+                      delete_training_run, save_trained_model, load_trained_model, get_saved_model_names,
+                      save_iris_reference_image, get_iris_reference_images, get_reference_image_count,
+                      delete_iris_reference_image, save_iris_image_features, get_all_iris_image_features,
+                      get_feature_count, save_iris_image_model, load_iris_image_model)
+from image_utils import (extract_features, normalize_features, batch_extract_features,
+                         load_image_from_bytes, SPECIES_MAPPING, SPECIES_ID_MAPPING, get_feature_dimension)
 import os
 from sklearn.preprocessing import StandardScaler
+from PIL import Image
 
 st.set_page_config(
     page_title="Deep Learning from Scratch",
@@ -38,6 +44,7 @@ def main():
         "Perceptron",
         "Multi-Layer Perceptron",
         "Iris Prediction",
+        "Image Recognition",
         "Train on Iris Dataset",
         "Train on MNIST",
         "Training History"
@@ -59,12 +66,15 @@ def main():
         show_iris_prediction()
     
     with tabs[5]:
-        show_iris_training()
+        show_image_recognition()
     
     with tabs[6]:
-        show_mnist_training()
+        show_iris_training()
     
     with tabs[7]:
+        show_mnist_training()
+    
+    with tabs[8]:
         show_training_history()
 
 
@@ -1076,6 +1086,366 @@ def show_iris_prediction():
             - Transfer learning from pre-trained models (ResNet, VGG) could be applied
             - A large dataset of labeled iris flower images would improve accuracy
             """)
+
+
+def show_image_recognition():
+    st.header("Iris Image Recognition")
+    
+    st.markdown("""
+    ## Image-Based Iris Classification
+    
+    This feature allows you to classify iris flowers directly from images using neural networks.
+    The system extracts visual features (colors, shapes, textures) from images and uses a trained
+    MLP to identify the iris species.
+    
+    **Three Iris Species:**
+    - **Iris-setosa** - Known for smaller petals
+    - **Iris-versicolor** - Medium-sized petals  
+    - **Iris-virginica** - Larger petals
+    """)
+    
+    mode_tabs = st.tabs(["Classify Image", "Manage Reference Images", "Train Image Model"])
+    
+    with mode_tabs[0]:
+        show_image_classification()
+    
+    with mode_tabs[1]:
+        show_reference_management()
+    
+    with mode_tabs[2]:
+        show_image_model_training()
+
+
+def show_image_classification():
+    st.subheader("Classify Iris from Image")
+    
+    model_data = load_iris_image_model('iris_image_classifier')
+    
+    if model_data is None:
+        st.warning("No trained image classifier found. Please train a model first in the 'Train Image Model' tab.")
+        st.info("You need to upload reference images and train the model before classification.")
+        return
+    
+    st.success(f"Image classifier loaded - Accuracy: {model_data['accuracy']:.1%} (trained on {model_data['num_reference_images']} images)")
+    
+    input_method = st.radio("Choose input method:", ["Upload Image", "Camera Capture"], horizontal=True)
+    
+    image_data = None
+    
+    if input_method == "Upload Image":
+        uploaded_file = st.file_uploader(
+            "Upload an iris flower image",
+            type=['jpg', 'jpeg', 'png', 'webp'],
+            help="Upload a clear photo of an iris flower for classification"
+        )
+        if uploaded_file is not None:
+            image_data = uploaded_file.read()
+            st.image(image_data, caption="Uploaded Image", width=300)
+    else:
+        camera_image = st.camera_input("Take a photo of an iris flower")
+        if camera_image is not None:
+            image_data = camera_image.read()
+    
+    if image_data is not None:
+        if st.button("Classify Iris Species", type="primary"):
+            with st.spinner("Analyzing image..."):
+                try:
+                    features = extract_features(image_data)
+                    
+                    features_normalized, _, _ = normalize_features(
+                        features.reshape(1, -1),
+                        mean=model_data['feature_scaler_mean'],
+                        std=model_data['feature_scaler_std']
+                    )
+                    
+                    mlp = MLP(
+                        layer_sizes=model_data['layer_sizes'],
+                        activation=model_data['activation']
+                    )
+                    mlp.weights = model_data['weights']
+                    mlp.biases = model_data['biases']
+                    
+                    X_T = features_normalized.T
+                    A, _ = mlp.forward_propagation(X_T)
+                    probabilities = A[mlp.L][:, 0]
+                    
+                    predicted_class = np.argmax(probabilities)
+                    confidence = probabilities[predicted_class]
+                    species_name = SPECIES_MAPPING[predicted_class]
+                    
+                    st.markdown("---")
+                    st.subheader("Classification Result")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Predicted Species", species_name)
+                    with col2:
+                        st.metric("Confidence", f"{confidence:.1%}")
+                    with col3:
+                        st.metric("Species ID", predicted_class)
+                    
+                    st.markdown("### Probability Distribution")
+                    prob_df = pd.DataFrame({
+                        'Species': [SPECIES_MAPPING[i] for i in range(3)],
+                        'Probability': probabilities
+                    })
+                    
+                    fig, ax = plt.subplots(figsize=(8, 4))
+                    colors = ['#2ecc71' if i == predicted_class else '#3498db' for i in range(3)]
+                    ax.barh(prob_df['Species'], prob_df['Probability'], color=colors)
+                    ax.set_xlim(0, 1)
+                    ax.set_xlabel('Probability')
+                    ax.set_title('Species Probability Distribution')
+                    for i, (species, prob) in enumerate(zip(prob_df['Species'], prob_df['Probability'])):
+                        ax.text(prob + 0.02, i, f'{prob:.1%}', va='center')
+                    plt.tight_layout()
+                    st.pyplot(fig)
+                    plt.close()
+                    
+                except Exception as e:
+                    st.error(f"Error classifying image: {str(e)}")
+
+
+def show_reference_management():
+    st.subheader("Manage Reference Images")
+    
+    st.markdown("""
+    Upload reference images for each iris species. These images will be used to train
+    the image classifier. For best results, upload at least 5-10 images per species.
+    """)
+    
+    ref_counts = get_reference_image_count()
+    if ref_counts:
+        st.markdown("### Current Reference Image Counts")
+        cols = st.columns(3)
+        for idx, (species, count) in enumerate(ref_counts.items()):
+            with cols[idx % 3]:
+                st.metric(species, f"{count} images")
+    
+    st.markdown("---")
+    st.markdown("### Upload New Reference Images")
+    
+    species_choice = st.selectbox(
+        "Select Iris Species:",
+        options=list(SPECIES_MAPPING.values()),
+        help="Choose the species for the images you're uploading"
+    )
+    species_id = SPECIES_ID_MAPPING[species_choice]
+    
+    uploaded_files = st.file_uploader(
+        f"Upload {species_choice} images",
+        type=['jpg', 'jpeg', 'png', 'webp'],
+        accept_multiple_files=True,
+        help="Upload clear photos of this iris species"
+    )
+    
+    if uploaded_files:
+        st.write(f"Selected {len(uploaded_files)} images")
+        
+        preview_cols = st.columns(min(len(uploaded_files), 5))
+        for idx, file in enumerate(uploaded_files[:5]):
+            with preview_cols[idx]:
+                st.image(file, use_container_width=True)
+        
+        if st.button("Save Reference Images", type="primary"):
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            saved_count = 0
+            for idx, file in enumerate(uploaded_files):
+                try:
+                    image_bytes = file.read()
+                    file.seek(0)
+                    
+                    os.makedirs("reference_images", exist_ok=True)
+                    image_path = f"reference_images/{species_choice}_{int(time.time())}_{idx}.png"
+                    
+                    img = Image.open(io.BytesIO(image_bytes))
+                    img.save(image_path)
+                    
+                    image_id = save_iris_reference_image(
+                        species_id=species_id,
+                        species_name=species_choice,
+                        image_path=image_path,
+                        filename=file.name
+                    )
+                    
+                    features = extract_features(image_bytes)
+                    save_iris_image_features(
+                        reference_image_id=image_id,
+                        species_id=species_id,
+                        species_name=species_choice,
+                        feature_vector=features
+                    )
+                    
+                    saved_count += 1
+                    progress_bar.progress((idx + 1) / len(uploaded_files))
+                    status_text.text(f"Processing image {idx + 1}/{len(uploaded_files)}")
+                    
+                except Exception as e:
+                    st.error(f"Error processing {file.name}: {str(e)}")
+            
+            st.success(f"Successfully saved {saved_count} reference images with extracted features!")
+            st.rerun()
+    
+    st.markdown("---")
+    st.markdown("### View Existing Reference Images")
+    
+    view_species = st.selectbox(
+        "View images for species:",
+        options=["All"] + list(SPECIES_MAPPING.values()),
+        key="view_species"
+    )
+    
+    if view_species == "All":
+        ref_images = get_iris_reference_images()
+    else:
+        species_id = SPECIES_ID_MAPPING[view_species]
+        ref_images = get_iris_reference_images(species_id)
+    
+    if ref_images:
+        st.write(f"Found {len(ref_images)} reference images")
+        
+        cols = st.columns(4)
+        for idx, img_record in enumerate(ref_images[:12]):
+            with cols[idx % 4]:
+                if img_record['image_path'] and os.path.exists(img_record['image_path']):
+                    st.image(img_record['image_path'], use_container_width=True)
+                    st.caption(f"{img_record['species_name']}")
+                    if st.button("Delete", key=f"del_{img_record['id']}"):
+                        delete_iris_reference_image(img_record['id'])
+                        if img_record['image_path'] and os.path.exists(img_record['image_path']):
+                            os.remove(img_record['image_path'])
+                        st.rerun()
+    else:
+        st.info("No reference images found. Upload some images above.")
+
+
+def show_image_model_training():
+    st.subheader("Train Image Classifier")
+    
+    st.markdown("""
+    Train a neural network to classify iris species based on image features.
+    The model extracts visual features (colors, shapes, textures) from your
+    reference images and learns to distinguish between species.
+    """)
+    
+    feature_counts = get_feature_count()
+    total_features = sum(feature_counts.values()) if feature_counts else 0
+    
+    st.markdown("### Training Data Status")
+    if feature_counts:
+        cols = st.columns(3)
+        for idx, (species, count) in enumerate(feature_counts.items()):
+            with cols[idx % 3]:
+                st.metric(species, f"{count} samples")
+        
+        st.write(f"**Total training samples:** {total_features}")
+        
+        min_per_class = min(feature_counts.values()) if feature_counts else 0
+        if min_per_class < 3:
+            st.warning("Need at least 3 images per species for effective training. Please upload more reference images.")
+    else:
+        st.warning("No training data available. Please upload reference images first.")
+        return
+    
+    st.markdown("---")
+    st.markdown("### Model Configuration")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        hidden_size_1 = st.slider("Hidden Layer 1 Size", 16, 128, 64, 8)
+        hidden_size_2 = st.slider("Hidden Layer 2 Size", 8, 64, 32, 8)
+        learning_rate = st.select_slider(
+            "Learning Rate",
+            options=[0.001, 0.005, 0.01, 0.05, 0.1],
+            value=0.01
+        )
+    
+    with col2:
+        epochs = st.slider("Training Epochs", 100, 2000, 500, 100)
+        activation = st.selectbox("Activation Function", ["relu", "sigmoid", "tanh"])
+        batch_size = st.slider("Batch Size", 4, 32, 16, 4)
+    
+    if st.button("Train Image Classifier", type="primary"):
+        X, y, species_names = get_all_iris_image_features()
+        
+        if X is None or len(X) < 6:
+            st.error("Not enough training data. Please upload more reference images.")
+            return
+        
+        with st.spinner("Training image classifier..."):
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            indices = np.random.permutation(len(X))
+            X = X[indices]
+            y = y[indices]
+            
+            split_idx = int(len(X) * 0.8)
+            X_train, X_test = X[:split_idx], X[split_idx:]
+            y_train, y_test = y[:split_idx], y[split_idx:]
+            
+            X_train_norm, scaler_mean, scaler_std = normalize_features(X_train)
+            X_test_norm, _, _ = normalize_features(X_test, mean=scaler_mean, std=scaler_std)
+            
+            feature_dim = X_train.shape[1]
+            layer_sizes = [feature_dim, hidden_size_1, hidden_size_2, 3]
+            
+            mlp = MLP(
+                layer_sizes=layer_sizes,
+                learning_rate=learning_rate,
+                activation=activation
+            )
+            
+            y_train_onehot = one_hot_encode(y_train, 3)
+            y_test_onehot = one_hot_encode(y_test, 3)
+            
+            status_text.text("Training in progress...")
+            mlp.fit(X_train_norm, y_train_onehot, epochs=epochs, batch_size=batch_size, verbose=False)
+            
+            progress_bar.progress(1.0)
+            
+            train_predictions = mlp.predict(X_train_norm)
+            test_predictions = mlp.predict(X_test_norm)
+            
+            train_accuracy = np.mean(train_predictions == y_train)
+            test_accuracy = np.mean(test_predictions == y_test)
+            
+            save_iris_image_model(
+                name='iris_image_classifier',
+                model=mlp,
+                feature_scaler_mean=scaler_mean,
+                feature_scaler_std=scaler_std,
+                accuracy=test_accuracy,
+                num_reference_images=total_features,
+                feature_version='v1'
+            )
+            
+            st.success("Model trained and saved successfully!")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Training Accuracy", f"{train_accuracy:.1%}")
+            with col2:
+                st.metric("Test Accuracy", f"{test_accuracy:.1%}")
+            
+            st.markdown("### Model Architecture")
+            st.write(f"Layer sizes: {layer_sizes}")
+            st.write(f"Total parameters: {sum(mlp.weights[l].size + mlp.biases[l].size for l in range(1, mlp.L + 1))}")
+    
+    existing_model = load_iris_image_model('iris_image_classifier')
+    if existing_model:
+        st.markdown("---")
+        st.markdown("### Current Trained Model")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Accuracy", f"{existing_model['accuracy']:.1%}" if existing_model['accuracy'] else "N/A")
+        with col2:
+            st.metric("Training Images", existing_model['num_reference_images'] or 0)
+        with col3:
+            st.metric("Created", existing_model['created_at'][:10] if existing_model['created_at'] else "N/A")
 
 
 def show_iris_training():
