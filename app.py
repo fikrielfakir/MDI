@@ -536,6 +536,21 @@ def show_iris_training():
     - **3 Classes**: setosa, versicolor, virginica (50 samples each)
     """)
     
+    iris_images = sorted([f for f in os.listdir('attached_assets') if f.startswith('iris-') and f.endswith('.jpg')])
+    if iris_images:
+        with st.expander("View Iris Setosa Flower Images", expanded=False):
+            st.markdown("### Iris Setosa Samples")
+            st.markdown("These are real photographs of Iris Setosa flowers - one of the three species in the dataset.")
+            cols = st.columns(6)
+            for idx, img_file in enumerate(iris_images[:12]):
+                with cols[idx % 6]:
+                    st.image(f"attached_assets/{img_file}", use_container_width=True)
+            if len(iris_images) > 12:
+                cols2 = st.columns(6)
+                for idx, img_file in enumerate(iris_images[12:]):
+                    with cols2[idx % 6]:
+                        st.image(f"attached_assets/{img_file}", use_container_width=True)
+    
     db_sample_count = get_iris_sample_count()
     if db_sample_count > 0:
         st.info(f"Database contains {db_sample_count} Iris samples loaded from CSV.")
