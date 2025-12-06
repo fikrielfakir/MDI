@@ -83,6 +83,84 @@ def load_iris_dataset(test_size=0.2, random_state=42, normalize=True, source='sk
     return X_train, X_test, y_train, y_test, feature_names, class_names
 
 
+def load_mnist_dataset(n_samples=10000, test_size=0.2, random_state=42):
+    """
+    Load and preprocess the MNIST dataset.
+    
+    The MNIST Dataset:
+        - 70,000 samples total (60,000 training, 10,000 test)
+        - 28x28 grayscale images = 784 features (flattened)
+        - 10 classes: digits 0-9
+        - Pixel values: 0-255 (normalized to 0-1)
+    
+    Preprocessing Steps:
+        1. Load from sklearn's fetch_openml
+        2. Flatten images from 28x28 to 784 features
+        3. Normalize pixel values from 0-255 to 0-1
+        4. Split into training and test sets
+    
+    Args:
+        n_samples (int): Number of samples to use (for faster training)
+        test_size (float): Proportion of data for testing (default: 0.2)
+        random_state (int): Random seed for reproducibility
+        
+    Returns:
+        tuple: (X_train, X_test, y_train, y_test, class_names)
+    """
+    from sklearn.datasets import fetch_openml
+    
+    mnist = fetch_openml('mnist_784', version=1, as_frame=False, parser='auto')
+    
+    X = mnist.data.astype(np.float32)
+    y = mnist.target.astype(np.int32)
+    
+    if n_samples is not None and n_samples < len(X):
+        np.random.seed(random_state)
+        indices = np.random.choice(len(X), n_samples, replace=False)
+        X = X[indices]
+        y = y[indices]
+    
+    X = X / 255.0
+    
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state, stratify=y
+    )
+    
+    class_names = [str(i) for i in range(10)]
+    
+    return X_train, X_test, y_train, y_test, class_names
+
+
+def get_mnist_sample_images(X, y, n_per_class=3, random_state=42):
+    """
+    Get sample images for each digit class from MNIST.
+    
+    Args:
+        X (np.ndarray): MNIST features (flattened images)
+        y (np.ndarray): MNIST labels
+        n_per_class (int): Number of samples per digit
+        random_state (int): Random seed
+        
+    Returns:
+        tuple: (images, labels) where images is shape (n_classes * n_per_class, 28, 28)
+    """
+    np.random.seed(random_state)
+    
+    sample_images = []
+    sample_labels = []
+    
+    for digit in range(10):
+        digit_indices = np.where(y == digit)[0]
+        selected = np.random.choice(digit_indices, min(n_per_class, len(digit_indices)), replace=False)
+        
+        for idx in selected:
+            img = X[idx].reshape(28, 28)
+            sample_images.append(img)
+            sample_labels.append(digit)
+    
+    return np.array(sample_images), np.array(sample_labels)
+
+
 def generate_classification_data(n_samples=300, n_features=2, n_classes=3,
                                   random_state=42):
     """

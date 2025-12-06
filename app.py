@@ -10,8 +10,8 @@ import time
 from activations import ActivationFunctions, visualize_activations
 from perceptron import Perceptron, demo_logic_gates, demonstrate_xor_problem
 from mlp import MLP, solve_xor_with_mlp
-from data_utils import (load_iris_dataset, compute_metrics, 
-                        format_confusion_matrix, one_hot_encode)
+from data_utils import (load_iris_dataset, load_mnist_dataset, get_mnist_sample_images,
+                        compute_metrics, format_confusion_matrix, one_hot_encode)
 from db_utils import (init_database, import_iris_from_csv, get_iris_sample_count,
                       save_training_run, get_training_history, get_training_run_details,
                       delete_training_run)
@@ -35,6 +35,7 @@ def main():
         "Perceptron",
         "Multi-Layer Perceptron",
         "Train on Iris Dataset",
+        "Train on MNIST",
         "Training History"
     ])
     
@@ -54,6 +55,9 @@ def main():
         show_iris_training()
     
     with tabs[5]:
+        show_mnist_training()
+    
+    with tabs[6]:
         show_training_history()
 
 
@@ -772,6 +776,282 @@ def show_iris_training():
         )
         
         st.success(f"Training complete! Results saved to database (Run #{run_id}).")
+
+
+def show_mnist_training():
+    st.header("Train MLP on MNIST Dataset")
+    
+    st.markdown("""
+    ## The MNIST Dataset
+    
+    The classic handwritten digit recognition dataset:
+    - **784 Features**: 28x28 grayscale images (flattened)
+    - **10 Classes**: Digits 0-9
+    - **70,000 Samples**: 60,000 training + 10,000 test (we use a subset for faster training)
+    
+    This is the "Hello World" of deep learning, demonstrating that our MLP can handle real image data!
+    """)
+    
+    st.sidebar.header("MNIST Configuration")
+    
+    n_samples = st.sidebar.select_slider(
+        "Number of Samples:",
+        options=[1000, 2000, 5000, 10000, 20000],
+        value=5000,
+        help="Fewer samples = faster training, more samples = better accuracy"
+    )
+    
+    hidden_layer_1 = st.sidebar.slider(
+        "Hidden Layer 1 Size:",
+        min_value=32,
+        max_value=256,
+        value=128,
+        step=32,
+        key="mnist_h1"
+    )
+    
+    hidden_layer_2 = st.sidebar.slider(
+        "Hidden Layer 2 Size:",
+        min_value=0,
+        max_value=128,
+        value=64,
+        step=32,
+        help="Set to 0 for a single hidden layer",
+        key="mnist_h2"
+    )
+    
+    activation = st.sidebar.selectbox(
+        "Activation Function:",
+        ["relu", "tanh", "sigmoid"],
+        key="mnist_activation"
+    )
+    
+    learning_rate = st.sidebar.slider(
+        "Learning Rate:",
+        min_value=0.001,
+        max_value=0.5,
+        value=0.1,
+        step=0.001,
+        format="%.3f",
+        key="mnist_lr"
+    )
+    
+    epochs = st.sidebar.slider(
+        "Training Epochs:",
+        min_value=10,
+        max_value=100,
+        value=30,
+        step=5,
+        key="mnist_epochs"
+    )
+    
+    batch_size = st.sidebar.selectbox(
+        "Batch Size:",
+        [32, 64, 128, 256],
+        index=1,
+        key="mnist_batch"
+    )
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.subheader("Sample MNIST Digits")
+        
+        if 'mnist_samples' not in st.session_state:
+            with st.spinner("Loading MNIST samples..."):
+                X_sample, _, y_sample, _, _ = load_mnist_dataset(n_samples=1000)
+                sample_imgs, sample_labels = get_mnist_sample_images(X_sample, y_sample, n_per_class=2)
+                st.session_state.mnist_samples = (sample_imgs, sample_labels)
+        
+        sample_imgs, sample_labels = st.session_state.mnist_samples
+        
+        fig, axes = plt.subplots(2, 10, figsize=(12, 3))
+        for i in range(20):
+            row = i // 10
+            col = i % 10
+            axes[row, col].imshow(sample_imgs[i], cmap='gray')
+            axes[row, col].axis('off')
+            axes[row, col].set_title(str(sample_labels[i]), fontsize=10)
+        plt.suptitle('Sample Digits from MNIST', fontsize=12)
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+    
+    with col2:
+        st.subheader("Dataset Info")
+        st.markdown("""
+        **Image Size**: 28 x 28 pixels
+        
+        **Input Features**: 784 (flattened)
+        
+        **Normalization**: 0-255 → 0-1
+        
+        **Classes**: 10 digits
+        """)
+    
+    if st.sidebar.button("Train on MNIST", type="primary", key="mnist_train_btn"):
+        with st.spinner(f"Loading {n_samples} MNIST samples..."):
+            X_train, X_test, y_train, y_test, class_names = load_mnist_dataset(n_samples=n_samples)
+        
+        st.info(f"Loaded {len(X_train)} training samples and {len(X_test)} test samples")
+        
+        if hidden_layer_2 > 0:
+            layer_sizes = [784, hidden_layer_1, hidden_layer_2, 10]
+        else:
+            layer_sizes = [784, hidden_layer_1, 10]
+        
+        mlp = MLP(
+            layer_sizes=layer_sizes,
+            learning_rate=learning_rate,
+            activation=activation,
+            weight_init='he' if activation == 'relu' else 'xavier'
+        )
+        
+        st.subheader("Network Architecture")
+        st.code(mlp.get_architecture_summary())
+        
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        status_text.text("Training in progress... This may take a moment for MNIST.")
+        
+        with st.spinner("Training MLP on MNIST..."):
+            history = mlp.fit(
+                X_train, y_train, 
+                epochs=epochs, 
+                batch_size=batch_size, 
+                verbose=False,
+                validation_data=(X_test, y_test)
+            )
+        
+        progress_bar.progress(100)
+        status_text.text("Training complete!")
+        
+        y_pred_train = mlp.predict(X_train)
+        y_pred_test = mlp.predict(X_test)
+        y_proba_test = mlp.predict_proba(X_test)
+        
+        train_metrics = compute_metrics(y_train, y_pred_train, class_names)
+        test_metrics = compute_metrics(y_test, y_pred_test, class_names)
+        
+        st.subheader("Training Curves")
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+        
+        epochs_range = range(len(history['loss']))
+        
+        axes[0].plot(epochs_range, history['loss'], label='Training Loss')
+        if history['val_loss']:
+            axes[0].plot(epochs_range, history['val_loss'], label='Validation Loss')
+        axes[0].set_title('Loss over Epochs')
+        axes[0].set_xlabel('Epoch')
+        axes[0].set_ylabel('Cross-Entropy Loss')
+        axes[0].legend()
+        axes[0].grid(True, alpha=0.3)
+        
+        axes[1].plot(epochs_range, history['accuracy'], label='Training Accuracy')
+        if history['val_accuracy']:
+            axes[1].plot(epochs_range, history['val_accuracy'], label='Validation Accuracy')
+        axes[1].set_title('Accuracy over Epochs')
+        axes[1].set_xlabel('Epoch')
+        axes[1].set_ylabel('Accuracy')
+        axes[1].legend()
+        axes[1].grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+        
+        st.subheader("Model Performance")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("### Training Set")
+            st.metric("Accuracy", f"{train_metrics['accuracy']:.2%}")
+            st.metric("F1-Score (Macro)", f"{train_metrics['f1_macro']:.4f}")
+        
+        with col2:
+            st.markdown("### Test Set")
+            st.metric("Accuracy", f"{test_metrics['accuracy']:.2%}")
+            st.metric("F1-Score (Macro)", f"{test_metrics['f1_macro']:.4f}")
+        
+        st.subheader("Confusion Matrix (Test Set)")
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        cm = test_metrics['confusion_matrix']
+        im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+        ax.figure.colorbar(im, ax=ax)
+        
+        ax.set(xticks=np.arange(cm.shape[1]),
+               yticks=np.arange(cm.shape[0]),
+               xticklabels=class_names,
+               yticklabels=class_names,
+               ylabel='True Label',
+               xlabel='Predicted Label',
+               title='MNIST Confusion Matrix')
+        
+        thresh = cm.max() / 2.
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                ax.text(j, i, format(cm[i, j], 'd'),
+                        ha="center", va="center",
+                        color="white" if cm[i, j] > thresh else "black",
+                        fontsize=8)
+        
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+        
+        st.subheader("Sample Predictions")
+        
+        np.random.seed(42)
+        sample_indices = np.random.choice(len(y_test), min(10, len(y_test)), replace=False)
+        
+        fig, axes = plt.subplots(2, 5, figsize=(12, 5))
+        for i, idx in enumerate(sample_indices):
+            row = i // 5
+            col = i % 5
+            img = X_test[idx].reshape(28, 28)
+            true_label = y_test[idx]
+            pred_label = y_pred_test[idx]
+            correct = true_label == pred_label
+            
+            axes[row, col].imshow(img, cmap='gray')
+            axes[row, col].axis('off')
+            color = 'green' if correct else 'red'
+            axes[row, col].set_title(f'True: {true_label}, Pred: {pred_label}', 
+                                      color=color, fontsize=10)
+        
+        plt.suptitle('Sample Predictions (Green=Correct, Red=Wrong)', fontsize=12)
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+        
+        run_id = save_training_run(
+            dataset_name='MNIST',
+            model_type='MLP',
+            layer_sizes=layer_sizes,
+            activation=activation,
+            learning_rate=learning_rate,
+            epochs=epochs,
+            batch_size=batch_size,
+            optimizer='sgd',
+            regularization=None,
+            final_train_accuracy=train_metrics['accuracy'],
+            final_test_accuracy=test_metrics['accuracy'],
+            final_train_loss=history['loss'][-1] if history['loss'] else None,
+            final_test_loss=history['val_loss'][-1] if history['val_loss'] else None,
+            train_loss_history=history['loss'],
+            train_accuracy_history=history['accuracy'],
+            val_loss_history=history['val_loss'],
+            val_accuracy_history=history['val_accuracy'],
+            confusion_matrix=cm,
+            f1_score=test_metrics['f1_macro'],
+            training_time_seconds=None
+        )
+        
+        st.success(f"Training complete! Results saved to database (Run #{run_id}).")
+        st.balloons()
 
 
 def show_training_history():
