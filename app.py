@@ -540,11 +540,19 @@ def show_perceptron():
     
     col1, col2 = st.columns([1, 2])
     
+    gate_labels = {
+        "ET": "AND",
+        "OU": "OR",
+        "NON-ET": "NAND",
+        "OU Exclusif": "XOR"
+    }
+    
     with col1:
-        gate_choice = st.selectbox(
+        gate_display = st.selectbox(
             "Sélectionnez une Porte Logique :",
-            ["AND", "OR", "NAND", "XOR"]
+            ["ET", "OU", "NON-ET", "OU Exclusif"]
         )
+        gate_choice = gate_labels[gate_display]
         
         learning_rate = st.slider(
             "Taux d'Apprentissage :",
@@ -589,7 +597,7 @@ def show_perceptron():
         
         result = st.session_state.perceptron_result
         
-        st.markdown(f"### Résultats de la Porte {gate_choice}")
+        st.markdown(f"### Résultats de la Porte {gate_display}")
         
         results_df = {
             'x₁': X[:, 0],
@@ -607,18 +615,18 @@ def show_perceptron():
         else:
             st.warning(f"Précision : {accuracy:.0%}")
             if gate_choice == "XOR":
-                st.error("Le perceptron ne peut pas apprendre XOR - ce n'est pas linéairement séparable !")
+                st.error("Le perceptron ne peut pas apprendre OU Exclusif - ce n'est pas linéairement séparable !")
     
     if gate_choice == "XOR":
         st.markdown("""
-        ## Le Problème XOR
+        ## Le Problème OU Exclusif
         
-        La porte XOR (OU exclusif) produit 1 quand les entrées sont **différentes**, 0 quand elles sont **identiques**.
+        La porte OU Exclusif produit 1 quand les entrées sont **différentes**, 0 quand elles sont **identiques**.
         
-        **Pourquoi le Perceptron Échoue sur XOR :**
+        **Pourquoi le Perceptron Échoue sur OU Exclusif :**
         
         Un perceptron crée une **frontière de décision linéaire** (une ligne droite en 2D). 
-        XOR nécessite une frontière **non-linéaire** - vous ne pouvez pas tracer une seule ligne droite 
+        OU Exclusif nécessite une frontière **non-linéaire** - vous ne pouvez pas tracer une seule ligne droite 
         pour séparer les classes !
         
         ```
@@ -691,16 +699,16 @@ def show_mlp():
     $$b^{[l]} := b^{[l]} - \\alpha \\cdot db^{[l]}$$
     """)
     
-    st.subheader("Démo : MLP Résolvant XOR")
+    st.subheader("Démo : MLP Résolvant OU Exclusif")
     
-    if st.button("Résoudre XOR avec MLP"):
-        with st.spinner("Entraînement du MLP sur XOR..."):
+    if st.button("Résoudre OU Exclusif avec MLP"):
+        with st.spinner("Entraînement du MLP sur OU Exclusif..."):
             result = solve_xor_with_mlp()
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### Table de Vérité XOR")
+            st.markdown("### Table de Vérité OU Exclusif")
             results_df = {
                 'x₁': result['X'][:, 0],
                 'x₂': result['X'][:, 1],
@@ -732,7 +740,7 @@ def show_mlp():
             plt.close()
         
         st.markdown("""
-        Le MLP avec juste **une couche cachée** apprend XOR avec succès ! 
+        Le MLP avec juste **une couche cachée** apprend OU Exclusif avec succès ! 
         Cela démontre la puissance des couches cachées pour apprendre des motifs non-linéaires.
         """)
 
