@@ -27,27 +27,27 @@ from sklearn.preprocessing import StandardScaler
 from PIL import Image
 
 st.set_page_config(
-    page_title="Deep Learning from Scratch",
+    page_title="Apprentissage Profond de Zéro",
     page_icon="🧠",
     layout="wide"
 )
 
 def main():
-    st.title("Deep Learning from Scratch")
-    st.markdown("### An Interactive Guide to Neural Networks")
+    st.title("Apprentissage Profond de Zéro")
+    st.markdown("### Un Guide Interactif sur les Réseaux de Neurones")
     
     init_database()
     
     tabs = st.tabs([
-        "Introduction to ANNs",
-        "Activation Functions", 
+        "Introduction aux RNA",
+        "Fonctions d'Activation", 
         "Perceptron",
-        "Multi-Layer Perceptron",
-        "Iris Prediction",
-        "Image Recognition",
-        "Train on Iris Dataset",
-        "Train on MNIST",
-        "Training History"
+        "Perceptron Multicouche",
+        "Prédiction Iris",
+        "Reconnaissance d'Images",
+        "Entraînement sur Iris",
+        "Entraînement sur MNIST",
+        "Historique d'Entraînement"
     ])
     
     with tabs[0]:
@@ -79,70 +79,70 @@ def main():
 
 
 def show_introduction():
-    st.header("Introduction to Artificial Neural Networks")
+    st.header("Introduction aux Réseaux de Neurones Artificiels")
     
     st.markdown("""
-    ## What is an Artificial Neural Network?
+    ## Qu'est-ce qu'un Réseau de Neurones Artificiel ?
     
-    An **Artificial Neural Network (ANN)** is a computational model inspired by the structure 
-    and function of biological neural networks in the brain. Just as our brains consist of 
-    billions of interconnected neurons that process information, ANNs consist of artificial 
-    neurons (also called nodes or units) organized in layers.
+    Un **Réseau de Neurones Artificiel (RNA)** est un modèle informatique inspiré de la structure 
+    et du fonctionnement des réseaux neuronaux biologiques dans le cerveau. Tout comme notre cerveau 
+    est composé de milliards de neurones interconnectés qui traitent l'information, les RNA sont 
+    constitués de neurones artificiels (également appelés nœuds ou unités) organisés en couches.
     """)
     
     st.markdown("---")
     
-    st.subheader("The Building Blocks of Neural Networks")
+    st.subheader("Les Éléments Fondamentaux des Réseaux de Neurones")
     
-    concept_tabs = st.tabs(["Neurons", "Weights & Biases", "Activation Functions", "Loss Functions", "Optimizers"])
+    concept_tabs = st.tabs(["Neurones", "Poids et Biais", "Fonctions d'Activation", "Fonctions de Perte", "Optimiseurs"])
     
     with concept_tabs[0]:
         st.markdown("""
-        ## Neurons - The Heart of Neural Networks
+        ## Neurones - Le Cœur des Réseaux de Neurones
         
-        Neurons are at the heart of any neural network, including the perceptron. These digital entities 
-        receive inputs, apply weights, and produce an output. Neurons are the building blocks through 
-        which information flows in a neural network. Just as neurons in our brains communicate, 
-        these fundamental blocks communicate in the language of numbers.
+        Les neurones sont au cœur de tout réseau de neurones, y compris le perceptron. Ces entités numériques 
+        reçoivent des entrées, appliquent des poids et produisent une sortie. Les neurones sont les blocs 
+        de construction à travers lesquels l'information circule dans un réseau de neurones. Tout comme 
+        les neurones de notre cerveau communiquent, ces blocs fondamentaux communiquent dans le langage des nombres.
         
-        ### Biological Inspiration
+        ### Inspiration Biologique
         
-        In the brain, a neuron:
-        1. Receives electrical signals from other neurons through **dendrites**
-        2. Processes these signals in the **cell body**
-        3. If the combined signal exceeds a threshold, it fires an output through the **axon**
-        4. The output connects to other neurons through **synapses**
+        Dans le cerveau, un neurone :
+        1. Reçoit des signaux électriques d'autres neurones via les **dendrites**
+        2. Traite ces signaux dans le **corps cellulaire**
+        3. Si le signal combiné dépasse un seuil, il émet une sortie via l'**axone**
+        4. La sortie se connecte à d'autres neurones via les **synapses**
         
-        ### Artificial Neuron Model
+        ### Modèle du Neurone Artificiel
         
-        Similarly, an artificial neuron:
-        1. Receives inputs from other neurons or raw data
-        2. Computes a weighted sum of these inputs
-        3. Applies an activation function to produce an output
-        4. Passes the output to the next layer
+        De même, un neurone artificiel :
+        1. Reçoit des entrées d'autres neurones ou des données brutes
+        2. Calcule une somme pondérée de ces entrées
+        3. Applique une fonction d'activation pour produire une sortie
+        4. Transmet la sortie à la couche suivante
         
-        ### Mathematical Model
+        ### Modèle Mathématique
         
-        For a single neuron with inputs $x_1, x_2, ..., x_n$:
+        Pour un neurone unique avec des entrées $x_1, x_2, ..., x_n$ :
         
         $$z = \\sum_{i=1}^{n} w_i x_i + b = w_1 x_1 + w_2 x_2 + ... + w_n x_n + b$$
         
         $$a = f(z)$$
         
-        Where:
-        - $w_i$ are the **weights** (connection strengths)
-        - $b$ is the **bias** (threshold adjustment)
-        - $f$ is the **activation function** (introduces non-linearity)
-        - $a$ is the **activation** (output of the neuron)
+        Où :
+        - $w_i$ sont les **poids** (forces de connexion)
+        - $b$ est le **biais** (ajustement du seuil)
+        - $f$ est la **fonction d'activation** (introduit la non-linéarité)
+        - $a$ est l'**activation** (sortie du neurone)
         """)
         
         st.markdown("""
         ```
-        Input Signals      Weights      Neuron Processing      Output
+        Signaux d'Entrée    Poids       Traitement du Neurone   Sortie
         
             x₁ ──────────── w₁ ──┐
                                  │
-            x₂ ──────────── w₂ ──┼──> [Σ + b] ──> [f(z)] ──> Output
+            x₂ ──────────── w₂ ──┼──> [Σ + b] ──> [f(z)] ──> Sortie
                                  │
             x₃ ──────────── w₃ ──┘
         ```
@@ -150,161 +150,161 @@ def show_introduction():
     
     with concept_tabs[1]:
         st.markdown("""
-        ## Weights and Biases
+        ## Poids et Biais
         
-        Weights and biases are the **adjustable parameters** in the network that influence the 
-        importance of input features and establish a threshold for activation.
+        Les poids et les biais sont les **paramètres ajustables** du réseau qui influencent 
+        l'importance des caractéristiques d'entrée et établissent un seuil d'activation.
         
-        ### Weights
+        ### Poids
         
-        Each input data feature is given a certain **weight**, indicating its importance in the decision:
+        Chaque caractéristique des données d'entrée reçoit un certain **poids**, indiquant son importance dans la décision :
         
-        - **High weight**: The input has strong influence on the output
-        - **Low weight**: The input has weak influence on the output
-        - **Negative weight**: The input has an inverse relationship with the output
+        - **Poids élevé** : L'entrée a une forte influence sur la sortie
+        - **Poids faible** : L'entrée a une faible influence sur la sortie
+        - **Poids négatif** : L'entrée a une relation inverse avec la sortie
         
-        During training, the network learns which features are most important by adjusting these weights.
+        Pendant l'entraînement, le réseau apprend quelles caractéristiques sont les plus importantes en ajustant ces poids.
         
-        ### Biases
+        ### Biais
         
-        Biases act as the **minimum requirement** for a feature to contribute to the output:
+        Les biais agissent comme l'**exigence minimale** pour qu'une caractéristique contribue à la sortie :
         
-        - A bias shifts the activation function horizontally
-        - It allows neurons to activate even when all inputs are zero
-        - Biases provide flexibility in the decision boundary
+        - Un biais décale la fonction d'activation horizontalement
+        - Il permet aux neurones de s'activer même lorsque toutes les entrées sont nulles
+        - Les biais offrent de la flexibilité dans la frontière de décision
         
-        ### The Learning Process
+        ### Le Processus d'Apprentissage
         
-        Adjusting weights and biases during model training refines the network's ability to make 
-        accurate predictions. The goal is to find the optimal combination that minimizes the 
-        prediction error.
+        L'ajustement des poids et des biais pendant l'entraînement du modèle affine la capacité du réseau 
+        à faire des prédictions précises. L'objectif est de trouver la combinaison optimale qui minimise 
+        l'erreur de prédiction.
         
-        $$\\text{Output} = f\\left(\\sum_{i} w_i \\cdot x_i + b\\right)$$
+        $$\\text{Sortie} = f\\left(\\sum_{i} w_i \\cdot x_i + b\\right)$$
         """)
         
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("""
-            **Weight Interpretation:**
-            | Weight Value | Meaning |
-            |-------------|---------|
-            | w > 0 | Positive correlation |
-            | w < 0 | Negative correlation |
-            | w ≈ 0 | Feature has little impact |
-            | |w| large | Strong influence |
+            **Interprétation des Poids :**
+            | Valeur du Poids | Signification |
+            |-----------------|---------------|
+            | w > 0 | Corrélation positive |
+            | w < 0 | Corrélation négative |
+            | w ≈ 0 | Caractéristique peu impactante |
+            | |w| grand | Forte influence |
             """)
         with col2:
             st.markdown("""
-            **Bias Role:**
-            - Acts as a threshold
-            - Enables activation shift
-            - Provides flexibility
-            - Independent of input
+            **Rôle du Biais :**
+            - Agit comme un seuil
+            - Permet le décalage de l'activation
+            - Offre de la flexibilité
+            - Indépendant de l'entrée
             """)
     
     with concept_tabs[2]:
         st.markdown("""
-        ## Activation Functions
+        ## Fonctions d'Activation
         
-        Activation functions, such as the step function in the perceptron, determine whether 
-        the neuron **fires**. In other words, they decide whether the information flowing through 
-        should be allowed to contribute to the output.
+        Les fonctions d'activation, comme la fonction échelon dans le perceptron, déterminent 
+        si le neurone **s'active**. En d'autres termes, elles décident si l'information qui circule 
+        doit être autorisée à contribuer à la sortie.
         
-        ### The Threshold Concept
+        ### Le Concept de Seuil
         
-        Picture it as a threshold—if the incoming data is above a certain level, the perceptron 
-        'fires' or produces an output; otherwise, it remains silent. This binary decision-making 
-        process showcases the essence of activation functions in shaping the output of our digital neurons.
+        Imaginez-le comme un seuil : si les données entrantes dépassent un certain niveau, le perceptron 
+        « s'active » ou produit une sortie ; sinon, il reste silencieux. Ce processus de décision binaire 
+        illustre l'essence des fonctions d'activation dans la formation de la sortie de nos neurones numériques.
         
-        ### Why Non-linearity Matters
+        ### Pourquoi la Non-linéarité est Importante
         
-        Without activation functions, a neural network would just be a **linear transformation**:
+        Sans fonctions d'activation, un réseau de neurones ne serait qu'une **transformation linéaire** :
         
         $$y = W_2 \\cdot (W_1 \\cdot x + b_1) + b_2 = W_{combined} \\cdot x + b_{combined}$$
         
-        No matter how many layers we stack, the result would still be linear! Activation functions 
-        introduce **non-linearity**, enabling networks to learn complex patterns.
+        Peu importe le nombre de couches empilées, le résultat resterait linéaire ! Les fonctions d'activation 
+        introduisent la **non-linéarité**, permettant aux réseaux d'apprendre des motifs complexes.
         
-        ### Common Activation Functions
+        ### Fonctions d'Activation Courantes
         
-        | Function | Formula | Output Range | Use Case |
-        |----------|---------|--------------|----------|
-        | **Sigmoid** | $\\sigma(z) = \\frac{1}{1+e^{-z}}$ | (0, 1) | Binary classification, LSTM gates |
-        | **Tanh** | $\\tanh(z) = \\frac{e^z - e^{-z}}{e^z + e^{-z}}$ | (-1, 1) | Hidden layers, RNNs |
-        | **ReLU** | $\\max(0, z)$ | [0, ∞) | Most hidden layers |
-        | **Softmax** | $\\frac{e^{z_i}}{\\sum_j e^{z_j}}$ | (0, 1), sum=1 | Multi-class output |
+        | Fonction | Formule | Plage de Sortie | Cas d'Utilisation |
+        |----------|---------|-----------------|-------------------|
+        | **Sigmoïde** | $\\sigma(z) = \\frac{1}{1+e^{-z}}$ | (0, 1) | Classification binaire, portes LSTM |
+        | **Tanh** | $\\tanh(z) = \\frac{e^z - e^{-z}}{e^z + e^{-z}}$ | (-1, 1) | Couches cachées, RNN |
+        | **ReLU** | $\\max(0, z)$ | [0, ∞) | Plupart des couches cachées |
+        | **Softmax** | $\\frac{e^{z_i}}{\\sum_j e^{z_j}}$ | (0, 1), somme=1 | Sortie multi-classe |
         """)
     
     with concept_tabs[3]:
         st.markdown("""
-        ## Loss Functions
+        ## Fonctions de Perte
         
-        Loss functions **quantify the difference** between the predicted output and the actual target. 
-        The objective is to minimize this difference during the training process.
+        Les fonctions de perte **quantifient la différence** entre la sortie prédite et la cible réelle. 
+        L'objectif est de minimiser cette différence pendant le processus d'entraînement.
         
-        ### The Concept of Error
+        ### Le Concept d'Erreur
         
-        In the context of neural networks, the concept of error or loss becomes evident. The network 
-        learns by **reducing the difference** between its prediction and the actual target, laying 
-        the groundwork for understanding more sophisticated loss functions in advanced architectures.
+        Dans le contexte des réseaux de neurones, le concept d'erreur ou de perte devient évident. Le réseau 
+        apprend en **réduisant la différence** entre sa prédiction et la cible réelle, posant ainsi 
+        les bases pour comprendre des fonctions de perte plus sophistiquées dans des architectures avancées.
         
-        ### Common Loss Functions
+        ### Fonctions de Perte Courantes
         
-        | Loss Function | Formula | Use Case |
-        |--------------|---------|----------|
-        | **Mean Squared Error (MSE)** | $\\frac{1}{n}\\sum(y - \\hat{y})^2$ | Regression problems |
-        | **Cross-Entropy** | $-\\sum y \\log(\\hat{y})$ | Classification problems |
-        | **Binary Cross-Entropy** | $-[y\\log(\\hat{y}) + (1-y)\\log(1-\\hat{y})]$ | Binary classification |
+        | Fonction de Perte | Formule | Cas d'Utilisation |
+        |-------------------|---------|-------------------|
+        | **Erreur Quadratique Moyenne (MSE)** | $\\frac{1}{n}\\sum(y - \\hat{y})^2$ | Problèmes de régression |
+        | **Entropie Croisée** | $-\\sum y \\log(\\hat{y})$ | Problèmes de classification |
+        | **Entropie Croisée Binaire** | $-[y\\log(\\hat{y}) + (1-y)\\log(1-\\hat{y})]$ | Classification binaire |
         
-        ### How Loss Guides Learning
+        ### Comment la Perte Guide l'Apprentissage
         
-        1. **Forward Pass**: Network makes a prediction
-        2. **Loss Calculation**: Compare prediction to actual value
-        3. **Backward Pass**: Calculate gradients of loss with respect to weights
-        4. **Update**: Adjust weights to reduce loss
+        1. **Passe Avant** : Le réseau fait une prédiction
+        2. **Calcul de la Perte** : Comparer la prédiction à la valeur réelle
+        3. **Passe Arrière** : Calculer les gradients de la perte par rapport aux poids
+        4. **Mise à Jour** : Ajuster les poids pour réduire la perte
         
-        The goal of training is to find weights that **minimize the loss function**.
+        L'objectif de l'entraînement est de trouver les poids qui **minimisent la fonction de perte**.
         """)
         
-        st.info("Lower loss = Better predictions. The training process iteratively reduces the loss until the model performs well.")
+        st.info("Perte faible = Meilleures prédictions. Le processus d'entraînement réduit itérativement la perte jusqu'à ce que le modèle fonctionne bien.")
     
     with concept_tabs[4]:
         st.markdown("""
-        ## Optimizers
+        ## Optimiseurs
         
-        Although more straightforward in the perceptron context, optimizers are crucial for 
-        **adjusting weights and biases** based on the computed loss. They fine-tune the model 
-        parameters to minimize the loss and improve overall performance.
+        Bien que plus simples dans le contexte du perceptron, les optimiseurs sont essentiels pour 
+        **ajuster les poids et les biais** en fonction de la perte calculée. Ils affinent les paramètres 
+        du modèle pour minimiser la perte et améliorer les performances globales.
         
-        ### The Role of Optimizers
+        ### Le Rôle des Optimiseurs
         
-        This mechanism hints at the broader optimization techniques in more complex deep learning 
-        architectures. Optimizers determine:
+        Ce mécanisme laisse entrevoir les techniques d'optimisation plus larges dans des architectures 
+        d'apprentissage profond plus complexes. Les optimiseurs déterminent :
         
-        - **How fast** to update weights (learning rate)
-        - **Which direction** to move (gradient direction)
-        - **How much** to adjust each parameter
+        - **À quelle vitesse** mettre à jour les poids (taux d'apprentissage)
+        - **Dans quelle direction** se déplacer (direction du gradient)
+        - **Combien** ajuster chaque paramètre
         
-        ### Popular Optimization Techniques
+        ### Techniques d'Optimisation Populaires
         
-        | Optimizer | Description | Characteristics |
-        |-----------|-------------|-----------------|
-        | **SGD** (Stochastic Gradient Descent) | Basic gradient descent with random samples | Simple, may oscillate |
-        | **Momentum** | Adds velocity to gradient updates | Faster convergence |
-        | **Adam** | Adaptive learning rates per parameter | Most popular, works well |
-        | **RMSprop** | Adapts learning rate based on recent gradients | Good for RNNs |
+        | Optimiseur | Description | Caractéristiques |
+        |------------|-------------|------------------|
+        | **SGD** (Descente de Gradient Stochastique) | Descente de gradient basique avec échantillons aléatoires | Simple, peut osciller |
+        | **Momentum** | Ajoute de la vélocité aux mises à jour du gradient | Convergence plus rapide |
+        | **Adam** | Taux d'apprentissage adaptatif par paramètre | Le plus populaire, fonctionne bien |
+        | **RMSprop** | Adapte le taux d'apprentissage basé sur les gradients récents | Bon pour les RNN |
         
-        ### Gradient Descent Visualization
+        ### Visualisation de la Descente de Gradient
         
-        Imagine rolling a ball down a hill to find the lowest point (minimum loss):
+        Imaginez faire rouler une balle sur une colline pour trouver le point le plus bas (perte minimale) :
         
-        - **Learning Rate**: How big each step is
-        - **Gradient**: The direction of steepest descent
-        - **Momentum**: The ball's velocity from previous steps
+        - **Taux d'Apprentissage** : La taille de chaque pas
+        - **Gradient** : La direction de la descente la plus raide
+        - **Momentum** : La vélocité de la balle due aux pas précédents
         
         """)
         
-        st.warning("Choosing the right optimizer and learning rate is crucial. Too large a learning rate may overshoot the minimum; too small may take forever to converge.")
+        st.warning("Choisir le bon optimiseur et le bon taux d'apprentissage est crucial. Un taux d'apprentissage trop élevé peut dépasser le minimum ; trop faible peut prendre une éternité à converger.")
     
     st.markdown("---")
     
@@ -312,185 +312,185 @@ def show_introduction():
     
     with col1:
         st.markdown("""
-        ### Network Architecture
+        ### Architecture du Réseau
         
-        Neural networks are organized in layers:
+        Les réseaux de neurones sont organisés en couches :
         
-        1. **Input Layer**: Receives raw data
-        2. **Hidden Layers**: Process information
-        3. **Output Layer**: Produces predictions
+        1. **Couche d'Entrée** : Reçoit les données brutes
+        2. **Couches Cachées** : Traitent l'information
+        3. **Couche de Sortie** : Produit les prédictions
         
-        A network with multiple hidden layers is called a **Deep Neural Network**.
+        Un réseau avec plusieurs couches cachées est appelé un **Réseau de Neurones Profond**.
         
-        Each node in the network represents a neuron and is connected to nodes in adjacent layers. 
-        These connections are associated with weights, which determine the strength of the connection.
+        Chaque nœud du réseau représente un neurone et est connecté aux nœuds des couches adjacentes. 
+        Ces connexions sont associées à des poids qui déterminent la force de la connexion.
         """)
     
     with col2:
         st.markdown("""
-        ### Why Neural Networks Work
+        ### Pourquoi les Réseaux de Neurones Fonctionnent
         
-        The power of neural networks comes from:
+        La puissance des réseaux de neurones provient de :
         
-        1. **Non-linear activation functions**: Allow learning complex patterns
-        2. **Multiple layers**: Enable hierarchical feature learning
-        3. **Gradient-based learning**: Automatically adjust weights
-        4. **Universal approximation**: Can approximate any continuous function
+        1. **Fonctions d'activation non-linéaires** : Permettent d'apprendre des motifs complexes
+        2. **Couches multiples** : Permettent l'apprentissage hiérarchique de caractéristiques
+        3. **Apprentissage basé sur le gradient** : Ajustent automatiquement les poids
+        4. **Approximation universelle** : Peuvent approximer toute fonction continue
         
-        Their capacity to learn from large datasets enables them to generalize well to new, unseen data.
+        Leur capacité à apprendre à partir de grands ensembles de données leur permet de bien généraliser sur de nouvelles données non vues.
         """)
     
     st.markdown("""
-    ### The Learning Process
+    ### Le Processus d'Apprentissage
     
-    Neural networks learn through a process called **training**:
+    Les réseaux de neurones apprennent à travers un processus appelé **entraînement** :
     
-    1. **Forward Propagation**: Input flows through the network to produce output
-    2. **Loss Computation**: Compare prediction with actual answer
-    3. **Backpropagation**: Calculate how each weight contributed to the error
-    4. **Gradient Descent**: Adjust weights to reduce error
+    1. **Propagation Avant** : L'entrée circule à travers le réseau pour produire une sortie
+    2. **Calcul de la Perte** : Comparer la prédiction avec la réponse réelle
+    3. **Rétropropagation** : Calculer comment chaque poids a contribué à l'erreur
+    4. **Descente de Gradient** : Ajuster les poids pour réduire l'erreur
     
-    This process repeats thousands of times until the network learns the patterns in the data.
-    The **backpropagation technique** improves the network by propagating error signals backward 
-    through the layers, allowing each weight to be adjusted proportionally to its contribution to the error.
+    Ce processus se répète des milliers de fois jusqu'à ce que le réseau apprenne les motifs dans les données.
+    La **technique de rétropropagation** améliore le réseau en propageant les signaux d'erreur en arrière 
+    à travers les couches, permettant à chaque poids d'être ajusté proportionnellement à sa contribution à l'erreur.
     """)
 
 
 def show_activation_functions():
-    st.header("Activation Functions")
+    st.header("Fonctions d'Activation")
     
     st.markdown("""
-    ## Why Do We Need Activation Functions?
+    ## Pourquoi Avons-Nous Besoin de Fonctions d'Activation ?
     
-    Without activation functions, a neural network would just be a **linear transformation**:
+    Sans fonctions d'activation, un réseau de neurones ne serait qu'une **transformation linéaire** :
     
     $$y = W_2 \\cdot (W_1 \\cdot x + b_1) + b_2 = W_{combined} \\cdot x + b_{combined}$$
     
-    No matter how many layers we stack, the result would still be linear! Activation functions 
-    introduce **non-linearity**, enabling networks to learn complex patterns.
+    Peu importe le nombre de couches empilées, le résultat resterait linéaire ! Les fonctions d'activation 
+    introduisent la **non-linéarité**, permettant aux réseaux d'apprendre des motifs complexes.
     """)
     
     viz_data = visualize_activations()
     x = viz_data['x']
     
     activation_choice = st.selectbox(
-        "Select Activation Function to Explore:",
-        ["Sigmoid", "Tanh", "ReLU", "Leaky ReLU", "All Functions"]
+        "Sélectionnez une Fonction d'Activation à Explorer :",
+        ["Sigmoïde", "Tanh", "ReLU", "Leaky ReLU", "Toutes les Fonctions"]
     )
     
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
     
-    if activation_choice == "Sigmoid":
+    if activation_choice == "Sigmoïde":
         axes[0].plot(x, viz_data['sigmoid'], 'b-', linewidth=2)
-        axes[0].set_title('Sigmoid: σ(z) = 1/(1 + e^(-z))')
+        axes[0].set_title('Sigmoïde : σ(z) = 1/(1 + e^(-z))')
         axes[1].plot(x, viz_data['sigmoid_derivative'], 'r-', linewidth=2)
-        axes[1].set_title("Sigmoid Derivative: σ'(z) = σ(z)(1 - σ(z))")
+        axes[1].set_title("Dérivée Sigmoïde : σ'(z) = σ(z)(1 - σ(z))")
         
         st.markdown("""
-        ### Sigmoid Function
+        ### Fonction Sigmoïde
         
-        **Formula**: $\\sigma(z) = \\frac{1}{1 + e^{-z}}$
+        **Formule** : $\\sigma(z) = \\frac{1}{1 + e^{-z}}$
         
-        **Output Range**: (0, 1)
+        **Plage de Sortie** : (0, 1)
         
-        **Advantages**:
-        - Outputs interpretable as probabilities
-        - Smooth, differentiable everywhere
+        **Avantages** :
+        - Sorties interprétables comme des probabilités
+        - Lisse, dérivable partout
         
-        **Disadvantages**:
-        - Vanishing gradient for large |z|
-        - Not zero-centered
-        - Computationally expensive
+        **Inconvénients** :
+        - Gradient évanescent pour de grandes valeurs de |z|
+        - Non centrée sur zéro
+        - Coûteuse en calcul
         
-        **Use Cases**: Binary classification output, LSTM/GRU gates
+        **Cas d'Utilisation** : Sortie de classification binaire, portes LSTM/GRU
         """)
         
     elif activation_choice == "Tanh":
         axes[0].plot(x, viz_data['tanh'], 'b-', linewidth=2)
-        axes[0].set_title('Tanh: tanh(z)')
+        axes[0].set_title('Tanh : tanh(z)')
         axes[1].plot(x, viz_data['tanh_derivative'], 'r-', linewidth=2)
-        axes[1].set_title("Tanh Derivative: 1 - tanh²(z)")
+        axes[1].set_title("Dérivée Tanh : 1 - tanh²(z)")
         
         st.markdown("""
-        ### Hyperbolic Tangent (Tanh)
+        ### Tangente Hyperbolique (Tanh)
         
-        **Formula**: $\\tanh(z) = \\frac{e^z - e^{-z}}{e^z + e^{-z}}$
+        **Formule** : $\\tanh(z) = \\frac{e^z - e^{-z}}{e^z + e^{-z}}$
         
-        **Output Range**: (-1, 1)
+        **Plage de Sortie** : (-1, 1)
         
-        **Advantages**:
-        - Zero-centered output (better gradient flow)
-        - Stronger gradients than sigmoid
+        **Avantages** :
+        - Sortie centrée sur zéro (meilleur flux de gradient)
+        - Gradients plus forts que la sigmoïde
         
-        **Disadvantages**:
-        - Still suffers from vanishing gradient
-        - Computationally expensive
+        **Inconvénients** :
+        - Souffre toujours du problème de gradient évanescent
+        - Coûteuse en calcul
         
-        **Use Cases**: Hidden layers (when zero-centering matters), RNNs
+        **Cas d'Utilisation** : Couches cachées (quand le centrage sur zéro est important), RNN
         """)
         
     elif activation_choice == "ReLU":
         axes[0].plot(x, viz_data['relu'], 'b-', linewidth=2)
-        axes[0].set_title('ReLU: max(0, z)')
+        axes[0].set_title('ReLU : max(0, z)')
         axes[1].plot(x, viz_data['relu_derivative'], 'r-', linewidth=2)
-        axes[1].set_title("ReLU Derivative")
+        axes[1].set_title("Dérivée ReLU")
         
         st.markdown("""
-        ### Rectified Linear Unit (ReLU)
+        ### Unité Linéaire Rectifiée (ReLU)
         
-        **Formula**: $\\text{ReLU}(z) = \\max(0, z)$
+        **Formule** : $\\text{ReLU}(z) = \\max(0, z)$
         
-        **Output Range**: [0, ∞)
+        **Plage de Sortie** : [0, ∞)
         
-        **Advantages**:
-        - No vanishing gradient for positive values
-        - Computationally efficient
-        - Sparse activation (many zeros)
-        - Faster convergence
+        **Avantages** :
+        - Pas de gradient évanescent pour les valeurs positives
+        - Efficace en calcul
+        - Activation éparse (beaucoup de zéros)
+        - Convergence plus rapide
         
-        **Disadvantages**:
-        - "Dying ReLU" problem (neurons can get stuck at 0)
-        - Not zero-centered
+        **Inconvénients** :
+        - Problème du « ReLU mourant » (les neurones peuvent rester bloqués à 0)
+        - Non centrée sur zéro
         
-        **Use Cases**: Most popular for hidden layers in modern networks
+        **Cas d'Utilisation** : La plus populaire pour les couches cachées dans les réseaux modernes
         """)
         
     elif activation_choice == "Leaky ReLU":
         axes[0].plot(x, viz_data['leaky_relu'], 'b-', linewidth=2)
         axes[0].set_title('Leaky ReLU')
         axes[1].plot(x, viz_data['leaky_relu_derivative'], 'r-', linewidth=2)
-        axes[1].set_title("Leaky ReLU Derivative")
+        axes[1].set_title("Dérivée Leaky ReLU")
         
         st.markdown("""
         ### Leaky ReLU
         
-        **Formula**: $\\text{LeakyReLU}(z) = \\begin{cases} z & \\text{if } z > 0 \\\\ \\alpha z & \\text{if } z \\leq 0 \\end{cases}$
+        **Formule** : $\\text{LeakyReLU}(z) = \\begin{cases} z & \\text{si } z > 0 \\\\ \\alpha z & \\text{si } z \\leq 0 \\end{cases}$
         
-        Where α is typically 0.01
+        Où α est généralement égal à 0.01
         
-        **Output Range**: (-∞, ∞)
+        **Plage de Sortie** : (-∞, ∞)
         
-        **Advantages**:
-        - Solves the "dying ReLU" problem
-        - Allows gradient flow for negative inputs
+        **Avantages** :
+        - Résout le problème du « ReLU mourant »
+        - Permet le flux de gradient pour les entrées négatives
         
-        **Use Cases**: Deep networks where dying ReLU is a concern
+        **Cas d'Utilisation** : Réseaux profonds où le ReLU mourant est préoccupant
         """)
         
     else:
-        axes[0].plot(x, viz_data['sigmoid'], label='Sigmoid')
+        axes[0].plot(x, viz_data['sigmoid'], label='Sigmoïde')
         axes[0].plot(x, viz_data['tanh'], label='Tanh')
         axes[0].plot(x, viz_data['relu'], label='ReLU')
         axes[0].plot(x, viz_data['leaky_relu'], label='Leaky ReLU')
         axes[0].legend()
-        axes[0].set_title('All Activation Functions')
+        axes[0].set_title('Toutes les Fonctions d\'Activation')
         
-        axes[1].plot(x, viz_data['sigmoid_derivative'], label='Sigmoid')
+        axes[1].plot(x, viz_data['sigmoid_derivative'], label='Sigmoïde')
         axes[1].plot(x, viz_data['tanh_derivative'], label='Tanh')
         axes[1].plot(x, viz_data['relu_derivative'], label='ReLU')
         axes[1].plot(x, viz_data['leaky_relu_derivative'], label='Leaky ReLU')
         axes[1].legend()
-        axes[1].set_title('All Derivatives')
+        axes[1].set_title('Toutes les Dérivées')
     
     for ax in axes:
         ax.axhline(y=0, color='k', linewidth=0.5)
@@ -504,50 +504,50 @@ def show_activation_functions():
 
 
 def show_perceptron():
-    st.header("The Perceptron")
+    st.header("Le Perceptron")
     
     st.markdown("""
-    ## The Simplest Neural Network
+    ## Le Réseau de Neurones le Plus Simple
     
-    The **Perceptron**, invented by Frank Rosenblatt in 1957, is the fundamental building 
-    block of neural networks. It's a single artificial neuron that can learn to classify 
-    **linearly separable** patterns.
+    Le **Perceptron**, inventé par Frank Rosenblatt en 1957, est le bloc de construction 
+    fondamental des réseaux de neurones. C'est un seul neurone artificiel qui peut apprendre 
+    à classifier des motifs **linéairement séparables**.
     
     ### Architecture
     
     ```
     [x₁] ──w₁──┐
-    [x₂] ──w₂──┼──[Σ + b]──[step]──> ŷ
+    [x₂] ──w₂──┼──[Σ + b]──[échelon]──> ŷ
     [x₃] ──w₃──┘
     ```
     
-    ### Mathematical Model
+    ### Modèle Mathématique
     
-    1. **Linear Combination**: $z = \\sum_{i} w_i x_i + b$
-    2. **Step Activation**: $\\hat{y} = \\begin{cases} 1 & \\text{if } z \\geq 0 \\\\ 0 & \\text{if } z < 0 \\end{cases}$
+    1. **Combinaison Linéaire** : $z = \\sum_{i} w_i x_i + b$
+    2. **Activation Échelon** : $\\hat{y} = \\begin{cases} 1 & \\text{si } z \\geq 0 \\\\ 0 & \\text{si } z < 0 \\end{cases}$
     
-    ### Learning Rule
+    ### Règle d'Apprentissage
     
-    The perceptron learning algorithm updates weights when a mistake is made:
+    L'algorithme d'apprentissage du perceptron met à jour les poids quand une erreur est commise :
     
-    $$w_{new} = w_{old} + \\alpha \\cdot (y_{true} - y_{pred}) \\cdot x$$
-    $$b_{new} = b_{old} + \\alpha \\cdot (y_{true} - y_{pred})$$
+    $$w_{nouveau} = w_{ancien} + \\alpha \\cdot (y_{vrai} - y_{prédit}) \\cdot x$$
+    $$b_{nouveau} = b_{ancien} + \\alpha \\cdot (y_{vrai} - y_{prédit})$$
     
-    Where α is the learning rate.
+    Où α est le taux d'apprentissage.
     """)
     
-    st.subheader("Interactive Demo: Logic Gates")
+    st.subheader("Démo Interactive : Portes Logiques")
     
     col1, col2 = st.columns([1, 2])
     
     with col1:
         gate_choice = st.selectbox(
-            "Select Logic Gate:",
+            "Sélectionnez une Porte Logique :",
             ["AND", "OR", "NAND", "XOR"]
         )
         
         learning_rate = st.slider(
-            "Learning Rate:",
+            "Taux d'Apprentissage :",
             min_value=0.01,
             max_value=1.0,
             value=0.1,
@@ -555,14 +555,14 @@ def show_perceptron():
         )
         
         epochs = st.slider(
-            "Training Epochs:",
+            "Époques d'Entraînement :",
             min_value=10,
             max_value=200,
             value=100,
             step=10
         )
         
-        train_btn = st.button("Train Perceptron")
+        train_btn = st.button("Entraîner le Perceptron")
     
     with col2:
         X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -589,68 +589,68 @@ def show_perceptron():
         
         result = st.session_state.perceptron_result
         
-        st.markdown(f"### {gate_choice} Gate Results")
+        st.markdown(f"### Résultats de la Porte {gate_choice}")
         
         results_df = {
             'x₁': X[:, 0],
             'x₂': X[:, 1],
-            'Expected': y,
-            'Predicted': result['predictions'],
-            'Correct': ['Yes' if y[i] == result['predictions'][i] else 'No' for i in range(4)]
+            'Attendu': y,
+            'Prédit': result['predictions'],
+            'Correct': ['Oui' if y[i] == result['predictions'][i] else 'Non' for i in range(4)]
         }
         st.dataframe(results_df, use_container_width=True)
         
         accuracy = np.mean(y == result['predictions'])
         
         if accuracy == 1.0:
-            st.success(f"Perfect classification! Accuracy: {accuracy:.0%}")
+            st.success(f"Classification parfaite ! Précision : {accuracy:.0%}")
         else:
-            st.warning(f"Accuracy: {accuracy:.0%}")
+            st.warning(f"Précision : {accuracy:.0%}")
             if gate_choice == "XOR":
-                st.error("The perceptron cannot learn XOR - it's not linearly separable!")
+                st.error("Le perceptron ne peut pas apprendre XOR - ce n'est pas linéairement séparable !")
     
     if gate_choice == "XOR":
         st.markdown("""
-        ## The XOR Problem
+        ## Le Problème XOR
         
-        The XOR (exclusive OR) gate outputs 1 when inputs are **different**, 0 when **same**.
+        La porte XOR (OU exclusif) produit 1 quand les entrées sont **différentes**, 0 quand elles sont **identiques**.
         
-        **Why Perceptron Fails on XOR:**
+        **Pourquoi le Perceptron Échoue sur XOR :**
         
-        A perceptron creates a **linear decision boundary** (a straight line in 2D). 
-        XOR requires a **non-linear** boundary - you cannot draw a single straight line 
-        to separate the classes!
+        Un perceptron crée une **frontière de décision linéaire** (une ligne droite en 2D). 
+        XOR nécessite une frontière **non-linéaire** - vous ne pouvez pas tracer une seule ligne droite 
+        pour séparer les classes !
         
         ```
           x₂
           │
         1 ├───●(0,1)───────●(1,1)
-          │   class 1      class 0
+          │   classe 1     classe 0
           │
         0 ├───●(0,0)───────●(1,0)
-          │   class 0      class 1
+          │   classe 0     classe 1
           └───────────────────── x₁
               0             1
         ```
         
-        **Solution**: Multi-Layer Perceptron (MLP) with hidden layers!
+        **Solution** : Perceptron Multicouche (MLP) avec des couches cachées !
         """)
 
 
 def show_mlp():
-    st.header("Multi-Layer Perceptron (MLP)")
+    st.header("Perceptron Multicouche (MLP)")
     
     st.markdown("""
-    ## From Perceptron to Deep Networks
+    ## Du Perceptron aux Réseaux Profonds
     
-    The **Multi-Layer Perceptron** extends the simple perceptron by adding **hidden layers** 
-    between input and output. This enables learning complex, non-linear patterns.
+    Le **Perceptron Multicouche** étend le perceptron simple en ajoutant des **couches cachées** 
+    entre l'entrée et la sortie. Cela permet d'apprendre des motifs complexes et non-linéaires.
     
-    ### Network Architecture
+    ### Architecture du Réseau
     
     ```
-    Input Layer      Hidden Layer 1    Hidden Layer 2    Output Layer
-    (4 neurons)      (10 neurons)      (8 neurons)       (3 neurons)
+    Couche d'Entrée  Couche Cachée 1   Couche Cachée 2   Couche de Sortie
+    (4 neurones)     (10 neurones)     (8 neurones)      (3 neurones)
     
         [x₁]              [h₁]              [h₁]             [ŷ₁]
         [x₂]  ────W¹────  [h₂]  ────W²────  [h₂]  ────W³────  [ŷ₂]
@@ -658,73 +658,73 @@ def show_mlp():
         [x₄]              [h₁₀]             [h₈]
     ```
     
-    ### Forward Propagation
+    ### Propagation Avant
     
-    For each layer $l$ from 1 to L:
+    Pour chaque couche $l$ de 1 à L :
     
     $$Z^{[l]} = W^{[l]} \\cdot A^{[l-1]} + b^{[l]}$$
     $$A^{[l]} = f^{[l]}(Z^{[l]})$$
     
-    Where:
-    - $W^{[l]}$ is the weight matrix for layer $l$
-    - $A^{[0]} = X$ (input data)
-    - $f^{[l]}$ is the activation function (ReLU for hidden, Softmax for output)
+    Où :
+    - $W^{[l]}$ est la matrice de poids pour la couche $l$
+    - $A^{[0]} = X$ (données d'entrée)
+    - $f^{[l]}$ est la fonction d'activation (ReLU pour les couches cachées, Softmax pour la sortie)
     """)
     
     st.markdown("""
-    ### Backpropagation
+    ### Rétropropagation
     
-    The **chain rule** allows us to compute gradients for all parameters:
+    La **règle de la chaîne** nous permet de calculer les gradients pour tous les paramètres :
     
-    **Output Layer:**
+    **Couche de Sortie :**
     $$dZ^{[L]} = A^{[L]} - Y$$
     $$dW^{[L]} = \\frac{1}{m} dZ^{[L]} \\cdot A^{[L-1]T}$$
     
-    **Hidden Layers** (for $l = L-1, ..., 1$):
+    **Couches Cachées** (pour $l = L-1, ..., 1$) :
     $$dA^{[l]} = W^{[l+1]T} \\cdot dZ^{[l+1]}$$
     $$dZ^{[l]} = dA^{[l]} \\odot f'^{[l]}(Z^{[l]})$$
     $$dW^{[l]} = \\frac{1}{m} dZ^{[l]} \\cdot A^{[l-1]T}$$
     
-    ### Weight Update (Gradient Descent)
+    ### Mise à Jour des Poids (Descente de Gradient)
     
     $$W^{[l]} := W^{[l]} - \\alpha \\cdot dW^{[l]}$$
     $$b^{[l]} := b^{[l]} - \\alpha \\cdot db^{[l]}$$
     """)
     
-    st.subheader("Demo: MLP Solving XOR")
+    st.subheader("Démo : MLP Résolvant XOR")
     
-    if st.button("Solve XOR with MLP"):
-        with st.spinner("Training MLP on XOR..."):
+    if st.button("Résoudre XOR avec MLP"):
+        with st.spinner("Entraînement du MLP sur XOR..."):
             result = solve_xor_with_mlp()
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### XOR Truth Table")
+            st.markdown("### Table de Vérité XOR")
             results_df = {
                 'x₁': result['X'][:, 0],
                 'x₂': result['X'][:, 1],
-                'Expected': result['y'],
-                'Predicted': result['predictions'],
-                'Correct': ['Yes' if result['y'][i] == result['predictions'][i] else 'No' for i in range(4)]
+                'Attendu': result['y'],
+                'Prédit': result['predictions'],
+                'Correct': ['Oui' if result['y'][i] == result['predictions'][i] else 'Non' for i in range(4)]
             }
             st.dataframe(results_df, use_container_width=True)
-            st.success(f"Accuracy: {result['accuracy']:.0%}")
+            st.success(f"Précision : {result['accuracy']:.0%}")
         
         with col2:
-            st.markdown("### Training Curves")
+            st.markdown("### Courbes d'Entraînement")
             fig, axes = plt.subplots(1, 2, figsize=(10, 3))
             
             axes[0].plot(result['history']['loss'])
-            axes[0].set_title('Loss over Epochs')
-            axes[0].set_xlabel('Epoch')
-            axes[0].set_ylabel('Cross-Entropy Loss')
+            axes[0].set_title('Perte au Cours des Époques')
+            axes[0].set_xlabel('Époque')
+            axes[0].set_ylabel('Perte Entropie Croisée')
             axes[0].grid(True, alpha=0.3)
             
             axes[1].plot(result['history']['accuracy'])
-            axes[1].set_title('Accuracy over Epochs')
-            axes[1].set_xlabel('Epoch')
-            axes[1].set_ylabel('Accuracy')
+            axes[1].set_title('Précision au Cours des Époques')
+            axes[1].set_xlabel('Époque')
+            axes[1].set_ylabel('Précision')
             axes[1].grid(True, alpha=0.3)
             
             plt.tight_layout()
@@ -732,19 +732,19 @@ def show_mlp():
             plt.close()
         
         st.markdown("""
-        The MLP with just **one hidden layer** successfully learns XOR! 
-        This demonstrates the power of hidden layers in learning non-linear patterns.
+        Le MLP avec juste **une couche cachée** apprend XOR avec succès ! 
+        Cela démontre la puissance des couches cachées pour apprendre des motifs non-linéaires.
         """)
 
 
 def show_iris_prediction():
-    st.header("Iris Species Prediction")
+    st.header("Prédiction des Espèces d'Iris")
     
     st.markdown("""
-    ## Predict Iris Species
+    ## Prédire les Espèces d'Iris
     
-    Use a trained neural network to classify iris flowers based on their measurements.
-    Choose from single measurement input, batch CSV upload, or multi-image upload for classification.
+    Utilisez un réseau de neurones entraîné pour classifier les fleurs d'iris en fonction de leurs mesures.
+    Choisissez entre la saisie de mesure unique, le téléchargement CSV par lot ou le téléchargement multi-images pour la classification.
     """)
     
     saved_models = get_saved_model_names()
@@ -753,10 +753,10 @@ def show_iris_prediction():
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.subheader("Model Status")
+        st.subheader("État du Modèle")
         
-        if st.button("Train Iris Classifier", type="primary"):
-            with st.spinner("Training model..."):
+        if st.button("Entraîner le Classifieur Iris", type="primary"):
+            with st.spinner("Entraînement du modèle..."):
                 X_train, X_test, y_train, y_test, feature_names, class_names = load_iris_dataset(source='sklearn')
                 
                 scaler = StandardScaler()
@@ -784,16 +784,16 @@ def show_iris_prediction():
                     class_names=list(class_names)
                 )
                 
-                st.success(f"Model trained and saved! Test accuracy: {accuracy:.1%}")
+                st.success(f"Modèle entraîné et sauvegardé ! Précision de test : {accuracy:.1%}")
                 st.rerun()
         
         if iris_models:
-            st.success(f"Active Model: {iris_models[0][0]} (Accuracy: {iris_models[0][1]:.1%})")
+            st.success(f"Modèle Actif : {iris_models[0][0]} (Précision : {iris_models[0][1]:.1%})")
         else:
-            st.warning("No trained model found. Click 'Train Iris Classifier' first.")
+            st.warning("Aucun modèle entraîné trouvé. Cliquez d'abord sur 'Entraîner le Classifieur Iris'.")
     
     with col2:
-        st.subheader("Iris Flower Reference")
+        st.subheader("Référence des Fleurs d'Iris")
         iris_images = sorted([f for f in os.listdir('attached_assets') if f.startswith('iris-') and f.endswith('.jpg')])
         if iris_images[:6]:
             cols = st.columns(3)
@@ -804,30 +804,30 @@ def show_iris_prediction():
     st.markdown("---")
     
     prediction_mode = st.radio(
-        "Prediction Mode:",
-        ["Single Measurement", "CSV Batch Upload", "Multi-Image Upload"],
+        "Mode de Prédiction :",
+        ["Mesure Unique", "Téléchargement CSV par Lot", "Téléchargement Multi-Images"],
         horizontal=True
     )
     
-    if prediction_mode == "Single Measurement":
-        st.subheader("Enter Flower Measurements")
+    if prediction_mode == "Mesure Unique":
+        st.subheader("Entrez les Mesures de la Fleur")
         
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            sepal_length = st.number_input("Sepal Length (cm)", min_value=0.0, max_value=10.0, value=5.1, step=0.1)
+            sepal_length = st.number_input("Longueur du Sépale (cm)", min_value=0.0, max_value=10.0, value=5.1, step=0.1)
         with col2:
-            sepal_width = st.number_input("Sepal Width (cm)", min_value=0.0, max_value=10.0, value=3.5, step=0.1)
+            sepal_width = st.number_input("Largeur du Sépale (cm)", min_value=0.0, max_value=10.0, value=3.5, step=0.1)
         with col3:
-            petal_length = st.number_input("Petal Length (cm)", min_value=0.0, max_value=10.0, value=1.4, step=0.1)
+            petal_length = st.number_input("Longueur du Pétale (cm)", min_value=0.0, max_value=10.0, value=1.4, step=0.1)
         with col4:
-            petal_width = st.number_input("Petal Width (cm)", min_value=0.0, max_value=10.0, value=0.2, step=0.1)
+            petal_width = st.number_input("Largeur du Pétale (cm)", min_value=0.0, max_value=10.0, value=0.2, step=0.1)
         
-        if st.button("Predict Species", key="single_predict"):
+        if st.button("Prédire l'Espèce", key="single_predict"):
             model_data = load_trained_model('iris_classifier')
             
             if model_data is None:
-                st.error("No trained model found. Please train the model first.")
+                st.error("Aucun modèle entraîné trouvé. Veuillez d'abord entraîner le modèle.")
             else:
                 mlp = MLP.from_saved_weights(
                     layer_sizes=model_data['layer_sizes'],
@@ -847,9 +847,9 @@ def show_iris_prediction():
                 class_names = model_data['class_names']
                 predicted_class = class_names[prediction]
                 
-                st.success(f"**Predicted Species: {predicted_class}**")
+                st.success(f"**Espèce Prédite : {predicted_class}**")
                 
-                st.markdown("#### Confidence Scores:")
+                st.markdown("#### Scores de Confiance :")
                 prob_cols = st.columns(3)
                 colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
                 for i, (name, prob) in enumerate(zip(class_names, probabilities)):
@@ -857,39 +857,39 @@ def show_iris_prediction():
                         st.metric(name, f"{prob:.1%}")
                         st.progress(float(prob))
     
-    elif prediction_mode == "CSV Batch Upload":
-        st.subheader("Upload CSV for Batch Prediction")
+    elif prediction_mode == "Téléchargement CSV par Lot":
+        st.subheader("Télécharger un CSV pour la Prédiction par Lot")
         
         st.markdown("""
-        **Required CSV Format:**
+        **Format CSV Requis :**
         ```
         Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
         1,5.1,3.5,1.4,0.2,Iris-setosa
         2,4.9,3.0,1.4,0.2,Iris-setosa
         ...
         ```
-        The `Species` column is optional - if provided, it will be used to calculate accuracy.
+        La colonne `Species` est optionnelle - si fournie, elle sera utilisée pour calculer la précision.
         """)
         
-        uploaded_csv = st.file_uploader("Upload CSV file", type=['csv'], key="csv_uploader")
+        uploaded_csv = st.file_uploader("Télécharger un fichier CSV", type=['csv'], key="csv_uploader")
         
         if uploaded_csv is not None:
             try:
                 df = pd.read_csv(uploaded_csv)
-                st.write(f"**Loaded {len(df)} samples**")
+                st.write(f"**{len(df)} échantillons chargés**")
                 st.dataframe(df.head(10), use_container_width=True)
                 
                 required_cols = ['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm']
                 missing_cols = [col for col in required_cols if col not in df.columns]
                 
                 if missing_cols:
-                    st.error(f"Missing required columns: {missing_cols}")
+                    st.error(f"Colonnes requises manquantes : {missing_cols}")
                 else:
-                    if st.button("Run Batch Prediction", type="primary"):
+                    if st.button("Exécuter la Prédiction par Lot", type="primary"):
                         model_data = load_trained_model('iris_classifier')
                         
                         if model_data is None:
-                            st.error("No trained model found. Please train the model first.")
+                            st.error("Aucun modèle entraîné trouvé. Veuillez d'abord entraîner le modèle.")
                         else:
                             mlp = MLP.from_saved_weights(
                                 layer_sizes=model_data['layer_sizes'],
@@ -929,19 +929,19 @@ def show_iris_prediction():
                                 results_df['Correct'] = actual_mapped == results_df['Predicted_Species']
                                 accuracy = results_df['Correct'].mean()
                                 
-                                st.success(f"Batch Prediction Complete! Accuracy: {accuracy:.1%}")
+                                st.success(f"Prédiction par Lot Terminée ! Précision : {accuracy:.1%}")
                             else:
-                                st.success("Batch Prediction Complete!")
+                                st.success("Prédiction par Lot Terminée !")
                             
-                            st.subheader("Prediction Results")
+                            st.subheader("Résultats de Prédiction")
                             st.dataframe(results_df, use_container_width=True)
                             
-                            st.subheader("Prediction Summary")
+                            st.subheader("Résumé des Prédictions")
                             summary_counts = pd.Series(predicted_classes).value_counts()
                             
                             col1, col2 = st.columns([1, 1])
                             with col1:
-                                st.markdown("**Species Distribution:**")
+                                st.markdown("**Distribution des Espèces :**")
                                 for species, count in summary_counts.items():
                                     st.write(f"- {species}: {count} ({count/len(predictions)*100:.1f}%)")
                             
@@ -949,14 +949,14 @@ def show_iris_prediction():
                                 fig, ax = plt.subplots(figsize=(6, 4))
                                 colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
                                 ax.pie(summary_counts.values, labels=summary_counts.index, autopct='%1.1f%%', colors=colors[:len(summary_counts)])
-                                ax.set_title('Predicted Species Distribution')
+                                ax.set_title('Distribution des Espèces Prédites')
                                 st.pyplot(fig)
                                 plt.close()
                             
                             csv_buffer = io.StringIO()
                             results_df.to_csv(csv_buffer, index=False)
                             st.download_button(
-                                label="Download Results as CSV",
+                                label="Télécharger les Résultats en CSV",
                                 data=csv_buffer.getvalue(),
                                 file_name="iris_predictions.csv",
                                 mime="text/csv"
