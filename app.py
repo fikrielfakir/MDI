@@ -963,21 +963,21 @@ def show_iris_prediction():
                             )
                             
             except Exception as e:
-                st.error(f"Error reading CSV: {str(e)}")
+                st.error(f"Erreur lors de la lecture du CSV : {str(e)}")
     
     else:
-        st.subheader("Upload Multiple Iris Flower Images")
-        st.info("Upload multiple images of iris flowers for classification. The model will analyze each image to help identify the species.")
+        st.subheader("Télécharger Plusieurs Images de Fleurs d'Iris")
+        st.info("Téléchargez plusieurs images de fleurs d'iris pour la classification. Le modèle analysera chaque image pour aider à identifier l'espèce.")
         
         uploaded_files = st.file_uploader(
-            "Choose iris flower images", 
+            "Choisissez des images de fleurs d'iris", 
             type=['jpg', 'jpeg', 'png'],
             accept_multiple_files=True,
             key="multi_image_uploader"
         )
         
         if uploaded_files:
-            st.write(f"**Uploaded {len(uploaded_files)} images**")
+            st.write(f"**{len(uploaded_files)} images téléchargées**")
             
             cols_per_row = 4
             for i in range(0, len(uploaded_files), cols_per_row):
@@ -988,34 +988,34 @@ def show_iris_prediction():
                             st.image(uploaded_files[i + j], caption=f"Image {i+j+1}", use_container_width=True)
             
             st.markdown("---")
-            st.subheader("Manual Classification Input")
+            st.subheader("Saisie Manuelle de Classification")
             st.markdown("""
-            Since image-based classification requires a CNN model, please enter measurements for each uploaded image.
-            This helps correlate visual features with measurement data.
+            Comme la classification basée sur les images nécessite un modèle CNN, veuillez entrer les mesures pour chaque image téléchargée.
+            Cela aide à corréler les caractéristiques visuelles avec les données de mesure.
             """)
             
             if 'image_measurements' not in st.session_state:
                 st.session_state.image_measurements = []
             
             for idx, uploaded_file in enumerate(uploaded_files):
-                with st.expander(f"Enter measurements for Image {idx + 1}: {uploaded_file.name}"):
+                with st.expander(f"Entrer les mesures pour l'Image {idx + 1} : {uploaded_file.name}"):
                     cols = st.columns([1, 1, 1, 1, 1])
                     with cols[0]:
                         st.image(uploaded_file, use_container_width=True)
                     with cols[1]:
-                        sl = st.number_input(f"Sepal Length", min_value=0.0, max_value=10.0, value=5.0, step=0.1, key=f"sl_{idx}")
+                        sl = st.number_input(f"Longueur du Sépale", min_value=0.0, max_value=10.0, value=5.0, step=0.1, key=f"sl_{idx}")
                     with cols[2]:
-                        sw = st.number_input(f"Sepal Width", min_value=0.0, max_value=10.0, value=3.0, step=0.1, key=f"sw_{idx}")
+                        sw = st.number_input(f"Largeur du Sépale", min_value=0.0, max_value=10.0, value=3.0, step=0.1, key=f"sw_{idx}")
                     with cols[3]:
-                        pl = st.number_input(f"Petal Length", min_value=0.0, max_value=10.0, value=1.5, step=0.1, key=f"pl_{idx}")
+                        pl = st.number_input(f"Longueur du Pétale", min_value=0.0, max_value=10.0, value=1.5, step=0.1, key=f"pl_{idx}")
                     with cols[4]:
-                        pw = st.number_input(f"Petal Width", min_value=0.0, max_value=10.0, value=0.2, step=0.1, key=f"pw_{idx}")
+                        pw = st.number_input(f"Largeur du Pétale", min_value=0.0, max_value=10.0, value=0.2, step=0.1, key=f"pw_{idx}")
             
-            if st.button("Classify All Images", type="primary"):
+            if st.button("Classifier Toutes les Images", type="primary"):
                 model_data = load_trained_model('iris_classifier')
                 
                 if model_data is None:
-                    st.error("No trained model found. Please train the model first.")
+                    st.error("Aucun modèle entraîné trouvé. Veuillez d'abord entraîner le modèle.")
                 else:
                     mlp = MLP.from_saved_weights(
                         layer_sizes=model_data['layer_sizes'],
@@ -1050,9 +1050,9 @@ def show_iris_prediction():
                             'probabilities': probabilities
                         })
                     
-                    st.success(f"Classified {len(results)} images!")
+                    st.success(f"{len(results)} images classifiées !")
                     
-                    st.subheader("Classification Results")
+                    st.subheader("Résultats de Classification")
                     cols_per_row = 3
                     for i in range(0, len(results), cols_per_row):
                         cols = st.columns(cols_per_row)
@@ -1062,49 +1062,49 @@ def show_iris_prediction():
                                 with col:
                                     st.image(uploaded_files[i + j], use_container_width=True)
                                     st.markdown(f"**{result['predicted_species']}**")
-                                    st.write(f"Confidence: {result['confidence']:.1%}")
+                                    st.write(f"Confiance : {result['confidence']:.1%}")
                     
                     results_df = pd.DataFrame([{
                         'Image': r['image_name'],
-                        'Predicted Species': r['predicted_species'],
-                        'Confidence': f"{r['confidence']*100:.1f}%"
+                        'Espèce Prédite': r['predicted_species'],
+                        'Confiance': f"{r['confidence']*100:.1f}%"
                     } for r in results])
                     
                     csv_buffer = io.StringIO()
                     results_df.to_csv(csv_buffer, index=False)
                     st.download_button(
-                        label="Download Results as CSV",
+                        label="Télécharger les Résultats en CSV",
                         data=csv_buffer.getvalue(),
-                        file_name="image_classification_results.csv",
+                        file_name="resultats_classification_images.csv",
                         mime="text/csv"
                     )
             
             st.markdown("---")
             st.markdown("""
-            **Note:** For automated image classification, a Convolutional Neural Network (CNN) would be required:
-            - A CNN can learn visual features directly from images
-            - Transfer learning from pre-trained models (ResNet, VGG) could be applied
-            - A large dataset of labeled iris flower images would improve accuracy
+            **Note :** Pour une classification d'images automatisée, un Réseau de Neurones Convolutif (CNN) serait nécessaire :
+            - Un CNN peut apprendre les caractéristiques visuelles directement à partir des images
+            - L'apprentissage par transfert à partir de modèles pré-entraînés (ResNet, VGG) pourrait être appliqué
+            - Un grand ensemble de données d'images de fleurs d'iris étiquetées améliorerait la précision
             """)
 
 
 def show_image_recognition():
-    st.header("Iris Image Recognition")
+    st.header("Reconnaissance d'Images Iris")
     
     st.markdown("""
-    ## Image-Based Iris Classification
+    ## Classification d'Iris Basée sur l'Image
     
-    This feature allows you to classify iris flowers directly from images using neural networks.
-    The system extracts visual features (colors, shapes, textures) from images and uses a trained
-    MLP to identify the iris species.
+    Cette fonctionnalité vous permet de classifier des fleurs d'iris directement à partir d'images en utilisant des réseaux de neurones.
+    Le système extrait les caractéristiques visuelles (couleurs, formes, textures) des images et utilise un
+    MLP entraîné pour identifier l'espèce d'iris.
     
-    **Three Iris Species:**
-    - **Iris-setosa** - Known for smaller petals
-    - **Iris-versicolor** - Medium-sized petals  
-    - **Iris-virginica** - Larger petals
+    **Trois Espèces d'Iris :**
+    - **Iris-setosa** - Connu pour ses pétales plus petits
+    - **Iris-versicolor** - Pétales de taille moyenne  
+    - **Iris-virginica** - Pétales plus grands
     """)
     
-    mode_tabs = st.tabs(["Classify Image", "Manage Reference Images", "Train Image Model"])
+    mode_tabs = st.tabs(["Classifier une Image", "Gérer les Images de Référence", "Entraîner le Modèle Image"])
     
     with mode_tabs[0]:
         show_image_classification()
@@ -1117,38 +1117,38 @@ def show_image_recognition():
 
 
 def show_image_classification():
-    st.subheader("Classify Iris from Image")
+    st.subheader("Classifier un Iris à partir d'une Image")
     
     model_data = load_iris_image_model('iris_image_classifier')
     
     if model_data is None:
-        st.warning("No trained image classifier found. Please train a model first in the 'Train Image Model' tab.")
-        st.info("You need to upload reference images and train the model before classification.")
+        st.warning("Aucun classificateur d'images entraîné trouvé. Veuillez d'abord entraîner un modèle dans l'onglet 'Entraîner le Modèle Image'.")
+        st.info("Vous devez télécharger des images de référence et entraîner le modèle avant la classification.")
         return
     
-    st.success(f"Image classifier loaded - Accuracy: {model_data['accuracy']:.1%} (trained on {model_data['num_reference_images']} images)")
+    st.success(f"Classificateur d'images chargé - Précision : {model_data['accuracy']:.1%} (entraîné sur {model_data['num_reference_images']} images)")
     
-    input_method = st.radio("Choose input method:", ["Upload Image", "Camera Capture"], horizontal=True)
+    input_method = st.radio("Choisissez la méthode d'entrée :", ["Télécharger une Image", "Capture Caméra"], horizontal=True)
     
     image_data = None
     
-    if input_method == "Upload Image":
+    if input_method == "Télécharger une Image":
         uploaded_file = st.file_uploader(
-            "Upload an iris flower image",
+            "Télécharger une image de fleur d'iris",
             type=['jpg', 'jpeg', 'png', 'webp'],
-            help="Upload a clear photo of an iris flower for classification"
+            help="Téléchargez une photo claire d'une fleur d'iris pour la classification"
         )
         if uploaded_file is not None:
             image_data = uploaded_file.read()
-            st.image(image_data, caption="Uploaded Image", width=300)
+            st.image(image_data, caption="Image Téléchargée", width=300)
     else:
-        camera_image = st.camera_input("Take a photo of an iris flower")
+        camera_image = st.camera_input("Prendre une photo d'une fleur d'iris")
         if camera_image is not None:
             image_data = camera_image.read()
     
     if image_data is not None:
-        if st.button("Classify Iris Species", type="primary"):
-            with st.spinner("Analyzing image..."):
+        if st.button("Classifier l'Espèce d'Iris", type="primary"):
+            with st.spinner("Analyse de l'image..."):
                 try:
                     features = extract_features(image_data)
                     
@@ -1174,80 +1174,80 @@ def show_image_classification():
                     species_name = SPECIES_MAPPING[predicted_class]
                     
                     st.markdown("---")
-                    st.subheader("Classification Result")
+                    st.subheader("Résultat de Classification")
                     
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Predicted Species", species_name)
+                        st.metric("Espèce Prédite", species_name)
                     with col2:
-                        st.metric("Confidence", f"{confidence:.1%}")
+                        st.metric("Confiance", f"{confidence:.1%}")
                     with col3:
-                        st.metric("Species ID", predicted_class)
+                        st.metric("ID Espèce", predicted_class)
                     
-                    st.markdown("### Probability Distribution")
+                    st.markdown("### Distribution des Probabilités")
                     prob_df = pd.DataFrame({
-                        'Species': [SPECIES_MAPPING[i] for i in range(3)],
-                        'Probability': probabilities
+                        'Espèce': [SPECIES_MAPPING[i] for i in range(3)],
+                        'Probabilité': probabilities
                     })
                     
                     fig, ax = plt.subplots(figsize=(8, 4))
                     colors = ['#2ecc71' if i == predicted_class else '#3498db' for i in range(3)]
-                    ax.barh(prob_df['Species'], prob_df['Probability'], color=colors)
+                    ax.barh(prob_df['Espèce'], prob_df['Probabilité'], color=colors)
                     ax.set_xlim(0, 1)
-                    ax.set_xlabel('Probability')
-                    ax.set_title('Species Probability Distribution')
-                    for i, (species, prob) in enumerate(zip(prob_df['Species'], prob_df['Probability'])):
+                    ax.set_xlabel('Probabilité')
+                    ax.set_title('Distribution des Probabilités par Espèce')
+                    for i, (species, prob) in enumerate(zip(prob_df['Espèce'], prob_df['Probabilité'])):
                         ax.text(prob + 0.02, i, f'{prob:.1%}', va='center')
                     plt.tight_layout()
                     st.pyplot(fig)
                     plt.close()
                     
                 except Exception as e:
-                    st.error(f"Error classifying image: {str(e)}")
+                    st.error(f"Erreur lors de la classification de l'image : {str(e)}")
 
 
 def show_reference_management():
-    st.subheader("Manage Reference Images")
+    st.subheader("Gérer les Images de Référence")
     
     st.markdown("""
-    Upload reference images for each iris species. These images will be used to train
-    the image classifier. For best results, upload at least 5-10 images per species.
+    Téléchargez des images de référence pour chaque espèce d'iris. Ces images seront utilisées pour entraîner
+    le classificateur d'images. Pour de meilleurs résultats, téléchargez au moins 5-10 images par espèce.
     """)
     
     ref_counts = get_reference_image_count()
     if ref_counts:
-        st.markdown("### Current Reference Image Counts")
+        st.markdown("### Nombre d'Images de Référence Actuelles")
         cols = st.columns(3)
         for idx, (species, count) in enumerate(ref_counts.items()):
             with cols[idx % 3]:
                 st.metric(species, f"{count} images")
     
     st.markdown("---")
-    st.markdown("### Upload New Reference Images")
+    st.markdown("### Télécharger de Nouvelles Images de Référence")
     
     species_choice = st.selectbox(
-        "Select Iris Species:",
+        "Sélectionner l'Espèce d'Iris :",
         options=list(SPECIES_MAPPING.values()),
-        help="Choose the species for the images you're uploading"
+        help="Choisissez l'espèce pour les images que vous téléchargez"
     )
     species_id = SPECIES_ID_MAPPING[species_choice]
     
     uploaded_files = st.file_uploader(
-        f"Upload {species_choice} images",
+        f"Télécharger des images {species_choice}",
         type=['jpg', 'jpeg', 'png', 'webp'],
         accept_multiple_files=True,
-        help="Upload clear photos of this iris species"
+        help="Téléchargez des photos claires de cette espèce d'iris"
     )
     
     if uploaded_files:
-        st.write(f"Selected {len(uploaded_files)} images")
+        st.write(f"{len(uploaded_files)} images sélectionnées")
         
         preview_cols = st.columns(min(len(uploaded_files), 5))
         for idx, file in enumerate(uploaded_files[:5]):
             with preview_cols[idx]:
                 st.image(file, use_container_width=True)
         
-        if st.button("Save Reference Images", type="primary"):
+        if st.button("Sauvegarder les Images de Référence", type="primary"):
             progress_bar = st.progress(0)
             status_text = st.empty()
             
@@ -1280,31 +1280,31 @@ def show_reference_management():
                     
                     saved_count += 1
                     progress_bar.progress((idx + 1) / len(uploaded_files))
-                    status_text.text(f"Processing image {idx + 1}/{len(uploaded_files)}")
+                    status_text.text(f"Traitement de l'image {idx + 1}/{len(uploaded_files)}")
                     
                 except Exception as e:
-                    st.error(f"Error processing {file.name}: {str(e)}")
+                    st.error(f"Erreur lors du traitement de {file.name} : {str(e)}")
             
-            st.success(f"Successfully saved {saved_count} reference images with extracted features!")
+            st.success(f"{saved_count} images de référence sauvegardées avec succès avec les caractéristiques extraites !")
             st.rerun()
     
     st.markdown("---")
-    st.markdown("### View Existing Reference Images")
+    st.markdown("### Voir les Images de Référence Existantes")
     
     view_species = st.selectbox(
-        "View images for species:",
-        options=["All"] + list(SPECIES_MAPPING.values()),
+        "Voir les images par espèce :",
+        options=["Toutes"] + list(SPECIES_MAPPING.values()),
         key="view_species"
     )
     
-    if view_species == "All":
+    if view_species == "Toutes":
         ref_images = get_iris_reference_images()
     else:
         species_id = SPECIES_ID_MAPPING[view_species]
         ref_images = get_iris_reference_images(species_id)
     
     if ref_images:
-        st.write(f"Found {len(ref_images)} reference images")
+        st.write(f"{len(ref_images)} images de référence trouvées")
         
         cols = st.columns(4)
         for idx, img_record in enumerate(ref_images[:12]):
@@ -1312,70 +1312,70 @@ def show_reference_management():
                 if img_record['image_path'] and os.path.exists(img_record['image_path']):
                     st.image(img_record['image_path'], use_container_width=True)
                     st.caption(f"{img_record['species_name']}")
-                    if st.button("Delete", key=f"del_{img_record['id']}"):
+                    if st.button("Supprimer", key=f"del_{img_record['id']}"):
                         delete_iris_reference_image(img_record['id'])
                         if img_record['image_path'] and os.path.exists(img_record['image_path']):
                             os.remove(img_record['image_path'])
                         st.rerun()
     else:
-        st.info("No reference images found. Upload some images above.")
+        st.info("Aucune image de référence trouvée. Téléchargez des images ci-dessus.")
 
 
 def show_image_model_training():
-    st.subheader("Train Image Classifier")
+    st.subheader("Entraîner le Classificateur d'Images")
     
     st.markdown("""
-    Train a neural network to classify iris species based on image features.
-    The model extracts visual features (colors, shapes, textures) from your
-    reference images and learns to distinguish between species.
+    Entraînez un réseau de neurones pour classifier les espèces d'iris basé sur les caractéristiques d'image.
+    Le modèle extrait les caractéristiques visuelles (couleurs, formes, textures) de vos
+    images de référence et apprend à distinguer entre les espèces.
     """)
     
     feature_counts = get_feature_count()
     total_features = sum(feature_counts.values()) if feature_counts else 0
     
-    st.markdown("### Training Data Status")
+    st.markdown("### État des Données d'Entraînement")
     if feature_counts:
         cols = st.columns(3)
         for idx, (species, count) in enumerate(feature_counts.items()):
             with cols[idx % 3]:
-                st.metric(species, f"{count} samples")
+                st.metric(species, f"{count} échantillons")
         
-        st.write(f"**Total training samples:** {total_features}")
+        st.write(f"**Total des échantillons d'entraînement :** {total_features}")
         
         min_per_class = min(feature_counts.values()) if feature_counts else 0
         if min_per_class < 3:
-            st.warning("Need at least 3 images per species for effective training. Please upload more reference images.")
+            st.warning("Besoin d'au moins 3 images par espèce pour un entraînement efficace. Veuillez télécharger plus d'images de référence.")
     else:
-        st.warning("No training data available. Please upload reference images first.")
+        st.warning("Aucune donnée d'entraînement disponible. Veuillez d'abord télécharger des images de référence.")
         return
     
     st.markdown("---")
-    st.markdown("### Model Configuration")
+    st.markdown("### Configuration du Modèle")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        hidden_size_1 = st.slider("Hidden Layer 1 Size", 16, 128, 64, 8)
-        hidden_size_2 = st.slider("Hidden Layer 2 Size", 8, 64, 32, 8)
+        hidden_size_1 = st.slider("Taille Couche Cachée 1", 16, 128, 64, 8)
+        hidden_size_2 = st.slider("Taille Couche Cachée 2", 8, 64, 32, 8)
         learning_rate = st.select_slider(
-            "Learning Rate",
+            "Taux d'Apprentissage",
             options=[0.001, 0.005, 0.01, 0.05, 0.1],
             value=0.01
         )
     
     with col2:
-        epochs = st.slider("Training Epochs", 100, 2000, 500, 100)
-        activation = st.selectbox("Activation Function", ["relu", "sigmoid", "tanh"])
-        batch_size = st.slider("Batch Size", 4, 32, 16, 4)
+        epochs = st.slider("Époques d'Entraînement", 100, 2000, 500, 100)
+        activation = st.selectbox("Fonction d'Activation", ["relu", "sigmoid", "tanh"])
+        batch_size = st.slider("Taille du Lot", 4, 32, 16, 4)
     
-    if st.button("Train Image Classifier", type="primary"):
+    if st.button("Entraîner le Classificateur d'Images", type="primary"):
         X, y, species_names = get_all_iris_image_features()
         
         if X is None or len(X) < 6:
-            st.error("Not enough training data. Please upload more reference images.")
+            st.error("Pas assez de données d'entraînement. Veuillez télécharger plus d'images de référence.")
             return
         
-        with st.spinner("Training image classifier..."):
+        with st.spinner("Entraînement du classificateur d'images..."):
             progress_bar = st.progress(0)
             status_text = st.empty()
             
@@ -1399,7 +1399,7 @@ def show_image_model_training():
                 activation=activation
             )
             
-            status_text.text("Training in progress...")
+            status_text.text("Entraînement en cours...")
             mlp.fit(X_train_norm, y_train, epochs=epochs, batch_size=batch_size, verbose=False)
             
             progress_bar.progress(1.0)
@@ -1420,47 +1420,47 @@ def show_image_model_training():
                 feature_version='v1'
             )
             
-            st.success("Model trained and saved successfully!")
+            st.success("Modèle entraîné et sauvegardé avec succès !")
             
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Training Accuracy", f"{train_accuracy:.1%}")
+                st.metric("Précision Entraînement", f"{train_accuracy:.1%}")
             with col2:
-                st.metric("Test Accuracy", f"{test_accuracy:.1%}")
+                st.metric("Précision Test", f"{test_accuracy:.1%}")
             
-            st.markdown("### Model Architecture")
-            st.write(f"Layer sizes: {layer_sizes}")
-            st.write(f"Total parameters: {sum(mlp.weights[l].size + mlp.biases[l].size for l in range(1, mlp.L + 1))}")
+            st.markdown("### Architecture du Modèle")
+            st.write(f"Tailles des couches : {layer_sizes}")
+            st.write(f"Total des paramètres : {sum(mlp.weights[l].size + mlp.biases[l].size for l in range(1, mlp.L + 1))}")
     
     existing_model = load_iris_image_model('iris_image_classifier')
     if existing_model:
         st.markdown("---")
-        st.markdown("### Current Trained Model")
+        st.markdown("### Modèle Entraîné Actuel")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Accuracy", f"{existing_model['accuracy']:.1%}" if existing_model['accuracy'] else "N/A")
+            st.metric("Précision", f"{existing_model['accuracy']:.1%}" if existing_model['accuracy'] else "N/A")
         with col2:
-            st.metric("Training Images", existing_model['num_reference_images'] or 0)
+            st.metric("Images d'Entraînement", existing_model['num_reference_images'] or 0)
         with col3:
-            st.metric("Created", existing_model['created_at'][:10] if existing_model['created_at'] else "N/A")
+            st.metric("Créé le", existing_model['created_at'][:10] if existing_model['created_at'] else "N/A")
 
 
 def show_iris_training():
-    st.header("Train MLP on Iris Dataset")
+    st.header("Entraîner le MLP sur le Jeu de Données Iris")
     
     st.markdown("""
-    ## The Iris Dataset
+    ## Le Jeu de Données Iris
     
-    A classic dataset for classification containing 150 samples of iris flowers:
-    - **4 Features**: sepal length, sepal width, petal length, petal width
-    - **3 Classes**: setosa, versicolor, virginica (50 samples each)
+    Un jeu de données classique pour la classification contenant 150 échantillons de fleurs d'iris :
+    - **4 Caractéristiques** : longueur du sépale, largeur du sépale, longueur du pétale, largeur du pétale
+    - **3 Classes** : setosa, versicolor, virginica (50 échantillons chacune)
     """)
     
     iris_images = sorted([f for f in os.listdir('attached_assets') if f.startswith('iris-') and f.endswith('.jpg')])
     if iris_images:
-        with st.expander("View Iris Setosa Flower Images", expanded=False):
-            st.markdown("### Iris Setosa Samples")
-            st.markdown("These are real photographs of Iris Setosa flowers - one of the three species in the dataset.")
+        with st.expander("Voir les Images de Fleurs Iris Setosa", expanded=False):
+            st.markdown("### Échantillons Iris Setosa")
+            st.markdown("Ce sont de vraies photographies de fleurs Iris Setosa - l'une des trois espèces du jeu de données.")
             cols = st.columns(6)
             for idx, img_file in enumerate(iris_images[:12]):
                 with cols[idx % 6]:
@@ -1473,33 +1473,33 @@ def show_iris_training():
     
     db_sample_count = get_iris_sample_count()
     if db_sample_count > 0:
-        st.info(f"Database contains {db_sample_count} Iris samples loaded from CSV.")
+        st.info(f"La base de données contient {db_sample_count} échantillons Iris chargés depuis CSV.")
     
-    st.sidebar.header("Data Source")
+    st.sidebar.header("Source des Données")
     
     data_source = st.sidebar.radio(
-        "Load Iris data from:",
-        ["sklearn (built-in)", "Database (CSV import)"],
-        help="Choose whether to load from sklearn or the database"
+        "Charger les données Iris depuis :",
+        ["sklearn (intégré)", "Base de données (import CSV)"],
+        help="Choisissez si vous voulez charger depuis sklearn ou la base de données"
     )
     
-    if data_source == "Database (CSV import)" and db_sample_count == 0:
+    if data_source == "Base de données (import CSV)" and db_sample_count == 0:
         if os.path.exists('attached_assets/Iris_1765047715889.csv'):
-            if st.sidebar.button("Import CSV to Database"):
+            if st.sidebar.button("Importer CSV dans la Base"):
                 try:
                     count = import_iris_from_csv('attached_assets/Iris_1765047715889.csv')
-                    st.sidebar.success(f"Imported {count} samples to database!")
+                    st.sidebar.success(f"{count} échantillons importés dans la base de données !")
                     st.rerun()
                 except Exception as e:
-                    st.sidebar.error(f"Error importing: {e}")
+                    st.sidebar.error(f"Erreur d'importation : {e}")
         else:
-            st.sidebar.warning("No CSV file found. Using sklearn instead.")
-            data_source = "sklearn (built-in)"
+            st.sidebar.warning("Aucun fichier CSV trouvé. Utilisation de sklearn à la place.")
+            data_source = "sklearn (intégré)"
     
-    st.sidebar.header("Model Configuration")
+    st.sidebar.header("Configuration du Modèle")
     
     hidden_layer_1 = st.sidebar.slider(
-        "Hidden Layer 1 Size:",
+        "Taille Couche Cachée 1 :",
         min_value=4,
         max_value=64,
         value=16,
@@ -1507,21 +1507,21 @@ def show_iris_training():
     )
     
     hidden_layer_2 = st.sidebar.slider(
-        "Hidden Layer 2 Size:",
+        "Taille Couche Cachée 2 :",
         min_value=0,
         max_value=32,
         value=8,
         step=4,
-        help="Set to 0 for a single hidden layer"
+        help="Mettez à 0 pour une seule couche cachée"
     )
     
     activation = st.sidebar.selectbox(
-        "Activation Function:",
+        "Fonction d'Activation :",
         ["relu", "tanh", "sigmoid"]
     )
     
     learning_rate = st.sidebar.slider(
-        "Learning Rate:",
+        "Taux d'Apprentissage :",
         min_value=0.001,
         max_value=0.5,
         value=0.01,
@@ -1530,7 +1530,7 @@ def show_iris_training():
     )
     
     epochs = st.sidebar.slider(
-        "Training Epochs:",
+        "Époques d'Entraînement :",
         min_value=100,
         max_value=2000,
         value=500,
@@ -1538,13 +1538,13 @@ def show_iris_training():
     )
     
     batch_size = st.sidebar.selectbox(
-        "Batch Size:",
+        "Taille du Lot :",
         [8, 16, 32, 64],
         index=1
     )
     
-    if st.sidebar.button("Train Model", type="primary"):
-        source = 'database' if 'Database' in data_source else 'sklearn'
+    if st.sidebar.button("Entraîner le Modèle", type="primary"):
+        source = 'database' if 'Base de données' in data_source else 'sklearn'
         X_train, X_test, y_train, y_test, feature_names, class_names = load_iris_dataset(source=source)
         
         if hidden_layer_2 > 0:
@@ -1559,13 +1559,13 @@ def show_iris_training():
             weight_init='he' if activation == 'relu' else 'xavier'
         )
         
-        st.subheader("Network Architecture")
+        st.subheader("Architecture du Réseau")
         st.code(mlp.get_architecture_summary())
         
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        with st.spinner("Training in progress..."):
+        with st.spinner("Entraînement en cours..."):
             history = mlp.fit(
                 X_train, y_train, 
                 epochs=epochs, 
@@ -1575,7 +1575,7 @@ def show_iris_training():
             )
         
         progress_bar.progress(100)
-        status_text.text("Training complete!")
+        status_text.text("Entraînement terminé !")
         
         y_pred_train = mlp.predict(X_train)
         y_pred_test = mlp.predict(X_test)
@@ -1584,26 +1584,26 @@ def show_iris_training():
         train_metrics = compute_metrics(y_train, y_pred_train, list(class_names))
         test_metrics = compute_metrics(y_test, y_pred_test, list(class_names))
         
-        st.subheader("Training Curves")
+        st.subheader("Courbes d'Entraînement")
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
         
         epochs_range = range(len(history['loss']))
         
-        axes[0].plot(epochs_range, history['loss'], label='Training Loss')
+        axes[0].plot(epochs_range, history['loss'], label='Perte Entraînement')
         if history['val_loss']:
-            axes[0].plot(epochs_range, history['val_loss'], label='Validation Loss')
-        axes[0].set_title('Loss over Epochs')
-        axes[0].set_xlabel('Epoch')
-        axes[0].set_ylabel('Cross-Entropy Loss')
+            axes[0].plot(epochs_range, history['val_loss'], label='Perte Validation')
+        axes[0].set_title('Perte par Époque')
+        axes[0].set_xlabel('Époque')
+        axes[0].set_ylabel('Perte Entropie Croisée')
         axes[0].legend()
         axes[0].grid(True, alpha=0.3)
         
-        axes[1].plot(epochs_range, history['accuracy'], label='Training Accuracy')
+        axes[1].plot(epochs_range, history['accuracy'], label='Précision Entraînement')
         if history['val_accuracy']:
-            axes[1].plot(epochs_range, history['val_accuracy'], label='Validation Accuracy')
-        axes[1].set_title('Accuracy over Epochs')
-        axes[1].set_xlabel('Epoch')
-        axes[1].set_ylabel('Accuracy')
+            axes[1].plot(epochs_range, history['val_accuracy'], label='Précision Validation')
+        axes[1].set_title('Précision par Époque')
+        axes[1].set_xlabel('Époque')
+        axes[1].set_ylabel('Précision')
         axes[1].legend()
         axes[1].grid(True, alpha=0.3)
         
@@ -1611,21 +1611,21 @@ def show_iris_training():
         st.pyplot(fig)
         plt.close()
         
-        st.subheader("Model Performance")
+        st.subheader("Performance du Modèle")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### Training Set")
-            st.metric("Accuracy", f"{train_metrics['accuracy']:.2%}")
-            st.metric("F1-Score (Macro)", f"{train_metrics['f1_macro']:.4f}")
+            st.markdown("### Ensemble d'Entraînement")
+            st.metric("Précision", f"{train_metrics['accuracy']:.2%}")
+            st.metric("Score F1 (Macro)", f"{train_metrics['f1_macro']:.4f}")
         
         with col2:
-            st.markdown("### Test Set")
-            st.metric("Accuracy", f"{test_metrics['accuracy']:.2%}")
-            st.metric("F1-Score (Macro)", f"{test_metrics['f1_macro']:.4f}")
+            st.markdown("### Ensemble de Test")
+            st.metric("Précision", f"{test_metrics['accuracy']:.2%}")
+            st.metric("Score F1 (Macro)", f"{test_metrics['f1_macro']:.4f}")
         
-        st.subheader("Confusion Matrix (Test Set)")
+        st.subheader("Matrice de Confusion (Ensemble de Test)")
         
         fig, ax = plt.subplots(figsize=(8, 6))
         cm = test_metrics['confusion_matrix']
@@ -1636,9 +1636,9 @@ def show_iris_training():
                yticks=np.arange(cm.shape[0]),
                xticklabels=class_names,
                yticklabels=class_names,
-               ylabel='True Label',
-               xlabel='Predicted Label',
-               title='Confusion Matrix')
+               ylabel='Étiquette Vraie',
+               xlabel='Étiquette Prédite',
+               title='Matrice de Confusion')
         
         plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
         
@@ -1653,18 +1653,18 @@ def show_iris_training():
         st.pyplot(fig)
         plt.close()
         
-        st.subheader("Per-Class Metrics (Test Set)")
+        st.subheader("Métriques par Classe (Ensemble de Test)")
         
         metrics_data = {
-            'Class': [m['class_name'] for m in test_metrics['per_class_metrics']],
-            'Precision': [f"{m['precision']:.4f}" for m in test_metrics['per_class_metrics']],
-            'Recall': [f"{m['recall']:.4f}" for m in test_metrics['per_class_metrics']],
-            'F1-Score': [f"{m['f1_score']:.4f}" for m in test_metrics['per_class_metrics']],
+            'Classe': [m['class_name'] for m in test_metrics['per_class_metrics']],
+            'Précision': [f"{m['precision']:.4f}" for m in test_metrics['per_class_metrics']],
+            'Rappel': [f"{m['recall']:.4f}" for m in test_metrics['per_class_metrics']],
+            'Score F1': [f"{m['f1_score']:.4f}" for m in test_metrics['per_class_metrics']],
             'Support': [m['support'] for m in test_metrics['per_class_metrics']]
         }
         st.dataframe(metrics_data, use_container_width=True)
         
-        st.subheader("Sample Predictions")
+        st.subheader("Exemples de Prédictions")
         
         np.random.seed(42)
         sample_indices = np.random.choice(len(y_test), min(5, len(y_test)), replace=False)
@@ -1674,15 +1674,15 @@ def show_iris_training():
             true_label = class_names[y_test[idx]]
             pred_label = class_names[y_pred_test[idx]]
             probs = y_proba_test[idx]
-            correct = "Yes" if y_test[idx] == y_pred_test[idx] else "No"
+            correct = "Oui" if y_test[idx] == y_pred_test[idx] else "Non"
             
             prob_str = ", ".join([f"{class_names[j]}: {probs[j]:.3f}" for j in range(len(class_names))])
             
             samples_data.append({
-                'True Label': true_label,
-                'Predicted': pred_label,
+                'Étiquette Vraie': true_label,
+                'Prédiction': pred_label,
                 'Correct': correct,
-                'Probabilities': prob_str
+                'Probabilités': prob_str
             })
         
         st.dataframe(samples_data, use_container_width=True)
@@ -1710,34 +1710,34 @@ def show_iris_training():
             training_time_seconds=None
         )
         
-        st.success(f"Training complete! Results saved to database (Run #{run_id}).")
+        st.success(f"Entraînement terminé ! Résultats sauvegardés dans la base de données (Exécution #{run_id}).")
 
 
 def show_mnist_training():
-    st.header("Train MLP on MNIST Dataset")
+    st.header("Entraîner le MLP sur le Jeu de Données MNIST")
     
     st.markdown("""
-    ## The MNIST Dataset
+    ## Le Jeu de Données MNIST
     
-    The classic handwritten digit recognition dataset:
-    - **784 Features**: 28x28 grayscale images (flattened)
-    - **10 Classes**: Digits 0-9
-    - **70,000 Samples**: 60,000 training + 10,000 test (we use a subset for faster training)
+    Le jeu de données classique de reconnaissance de chiffres manuscrits :
+    - **784 Caractéristiques** : Images en niveaux de gris 28x28 (aplaties)
+    - **10 Classes** : Chiffres 0-9
+    - **70 000 Échantillons** : 60 000 entraînement + 10 000 test (nous utilisons un sous-ensemble pour un entraînement plus rapide)
     
-    This is the "Hello World" of deep learning, demonstrating that our MLP can handle real image data!
+    C'est le "Hello World" de l'apprentissage profond, démontrant que notre MLP peut traiter de vraies données d'images !
     """)
     
-    st.sidebar.header("MNIST Configuration")
+    st.sidebar.header("Configuration MNIST")
     
     n_samples = st.sidebar.select_slider(
-        "Number of Samples:",
+        "Nombre d'Échantillons :",
         options=[1000, 2000, 5000, 10000, 20000],
         value=5000,
-        help="Fewer samples = faster training, more samples = better accuracy"
+        help="Moins d'échantillons = entraînement plus rapide, plus d'échantillons = meilleure précision"
     )
     
     hidden_layer_1 = st.sidebar.slider(
-        "Hidden Layer 1 Size:",
+        "Taille Couche Cachée 1 :",
         min_value=32,
         max_value=256,
         value=128,
@@ -1746,23 +1746,23 @@ def show_mnist_training():
     )
     
     hidden_layer_2 = st.sidebar.slider(
-        "Hidden Layer 2 Size:",
+        "Taille Couche Cachée 2 :",
         min_value=0,
         max_value=128,
         value=64,
         step=32,
-        help="Set to 0 for a single hidden layer",
+        help="Mettez à 0 pour une seule couche cachée",
         key="mnist_h2"
     )
     
     activation = st.sidebar.selectbox(
-        "Activation Function:",
+        "Fonction d'Activation :",
         ["relu", "tanh", "sigmoid"],
         key="mnist_activation"
     )
     
     learning_rate = st.sidebar.slider(
-        "Learning Rate:",
+        "Taux d'Apprentissage :",
         min_value=0.001,
         max_value=0.5,
         value=0.1,
@@ -1772,7 +1772,7 @@ def show_mnist_training():
     )
     
     epochs = st.sidebar.slider(
-        "Training Epochs:",
+        "Époques d'Entraînement :",
         min_value=10,
         max_value=100,
         value=30,
@@ -1781,7 +1781,7 @@ def show_mnist_training():
     )
     
     batch_size = st.sidebar.selectbox(
-        "Batch Size:",
+        "Taille du Lot :",
         [32, 64, 128, 256],
         index=1,
         key="mnist_batch"
@@ -1790,16 +1790,16 @@ def show_mnist_training():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader("Sample MNIST Digits")
+        st.subheader("Exemples de Chiffres MNIST")
         
         if 'mnist_samples' not in st.session_state:
             st.session_state.mnist_samples = None
             st.session_state.mnist_load_error = None
         
         if st.session_state.mnist_samples is None and st.session_state.mnist_load_error is None:
-            if st.button("Load Sample Digits"):
+            if st.button("Charger les Exemples de Chiffres"):
                 try:
-                    with st.spinner("Loading MNIST samples..."):
+                    with st.spinner("Chargement des échantillons MNIST..."):
                         X_sample, _, y_sample, _, _ = load_mnist_dataset(n_samples=1000)
                         sample_imgs, sample_labels = get_mnist_sample_images(X_sample, y_sample, n_per_class=2)
                         st.session_state.mnist_samples = (sample_imgs, sample_labels)
@@ -1809,8 +1809,8 @@ def show_mnist_training():
                     st.rerun()
         
         if st.session_state.mnist_load_error:
-            st.warning(f"Could not load MNIST samples: {st.session_state.mnist_load_error}")
-            st.info("You can still train on MNIST by clicking the 'Train on MNIST' button in the sidebar.")
+            st.warning(f"Impossible de charger les échantillons MNIST : {st.session_state.mnist_load_error}")
+            st.info("Vous pouvez toujours entraîner sur MNIST en cliquant sur le bouton 'Entraîner sur MNIST' dans la barre latérale.")
         elif st.session_state.mnist_samples:
             sample_imgs, sample_labels = st.session_state.mnist_samples
             
@@ -1821,30 +1821,30 @@ def show_mnist_training():
                 axes[row, col].imshow(sample_imgs[i], cmap='gray')
                 axes[row, col].axis('off')
                 axes[row, col].set_title(str(sample_labels[i]), fontsize=10)
-            plt.suptitle('Sample Digits from MNIST', fontsize=12)
+            plt.suptitle('Exemples de Chiffres MNIST', fontsize=12)
             plt.tight_layout()
             st.pyplot(fig)
             plt.close()
         else:
-            st.info("Click the button above to load sample MNIST digits.")
+            st.info("Cliquez sur le bouton ci-dessus pour charger les exemples de chiffres MNIST.")
     
     with col2:
-        st.subheader("Dataset Info")
+        st.subheader("Infos sur le Jeu de Données")
         st.markdown("""
-        **Image Size**: 28 x 28 pixels
+        **Taille de l'Image** : 28 x 28 pixels
         
-        **Input Features**: 784 (flattened)
+        **Caractéristiques d'Entrée** : 784 (aplaties)
         
-        **Normalization**: 0-255 → 0-1
+        **Normalisation** : 0-255 → 0-1
         
-        **Classes**: 10 digits
+        **Classes** : 10 chiffres
         """)
     
-    if st.sidebar.button("Train on MNIST", type="primary", key="mnist_train_btn"):
-        with st.spinner(f"Loading {n_samples} MNIST samples..."):
+    if st.sidebar.button("Entraîner sur MNIST", type="primary", key="mnist_train_btn"):
+        with st.spinner(f"Chargement de {n_samples} échantillons MNIST..."):
             X_train, X_test, y_train, y_test, class_names = load_mnist_dataset(n_samples=n_samples)
         
-        st.info(f"Loaded {len(X_train)} training samples and {len(X_test)} test samples")
+        st.info(f"{len(X_train)} échantillons d'entraînement et {len(X_test)} échantillons de test chargés")
         
         if hidden_layer_2 > 0:
             layer_sizes = [784, hidden_layer_1, hidden_layer_2, 10]
@@ -1858,15 +1858,15 @@ def show_mnist_training():
             weight_init='he' if activation == 'relu' else 'xavier'
         )
         
-        st.subheader("Network Architecture")
+        st.subheader("Architecture du Réseau")
         st.code(mlp.get_architecture_summary())
         
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        status_text.text("Training in progress... This may take a moment for MNIST.")
+        status_text.text("Entraînement en cours... Cela peut prendre un moment pour MNIST.")
         
-        with st.spinner("Training MLP on MNIST..."):
+        with st.spinner("Entraînement du MLP sur MNIST..."):
             history = mlp.fit(
                 X_train, y_train, 
                 epochs=epochs, 
@@ -1876,7 +1876,7 @@ def show_mnist_training():
             )
         
         progress_bar.progress(100)
-        status_text.text("Training complete!")
+        status_text.text("Entraînement terminé !")
         
         y_pred_train = mlp.predict(X_train)
         y_pred_test = mlp.predict(X_test)
@@ -1885,26 +1885,26 @@ def show_mnist_training():
         train_metrics = compute_metrics(y_train, y_pred_train, class_names)
         test_metrics = compute_metrics(y_test, y_pred_test, class_names)
         
-        st.subheader("Training Curves")
+        st.subheader("Courbes d'Entraînement")
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
         
         epochs_range = range(len(history['loss']))
         
-        axes[0].plot(epochs_range, history['loss'], label='Training Loss')
+        axes[0].plot(epochs_range, history['loss'], label='Perte Entraînement')
         if history['val_loss']:
-            axes[0].plot(epochs_range, history['val_loss'], label='Validation Loss')
-        axes[0].set_title('Loss over Epochs')
-        axes[0].set_xlabel('Epoch')
-        axes[0].set_ylabel('Cross-Entropy Loss')
+            axes[0].plot(epochs_range, history['val_loss'], label='Perte Validation')
+        axes[0].set_title('Perte par Époque')
+        axes[0].set_xlabel('Époque')
+        axes[0].set_ylabel('Perte Entropie Croisée')
         axes[0].legend()
         axes[0].grid(True, alpha=0.3)
         
-        axes[1].plot(epochs_range, history['accuracy'], label='Training Accuracy')
+        axes[1].plot(epochs_range, history['accuracy'], label='Précision Entraînement')
         if history['val_accuracy']:
-            axes[1].plot(epochs_range, history['val_accuracy'], label='Validation Accuracy')
-        axes[1].set_title('Accuracy over Epochs')
-        axes[1].set_xlabel('Epoch')
-        axes[1].set_ylabel('Accuracy')
+            axes[1].plot(epochs_range, history['val_accuracy'], label='Précision Validation')
+        axes[1].set_title('Précision par Époque')
+        axes[1].set_xlabel('Époque')
+        axes[1].set_ylabel('Précision')
         axes[1].legend()
         axes[1].grid(True, alpha=0.3)
         
@@ -1912,21 +1912,21 @@ def show_mnist_training():
         st.pyplot(fig)
         plt.close()
         
-        st.subheader("Model Performance")
+        st.subheader("Performance du Modèle")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### Training Set")
-            st.metric("Accuracy", f"{train_metrics['accuracy']:.2%}")
-            st.metric("F1-Score (Macro)", f"{train_metrics['f1_macro']:.4f}")
+            st.markdown("### Ensemble d'Entraînement")
+            st.metric("Précision", f"{train_metrics['accuracy']:.2%}")
+            st.metric("Score F1 (Macro)", f"{train_metrics['f1_macro']:.4f}")
         
         with col2:
-            st.markdown("### Test Set")
-            st.metric("Accuracy", f"{test_metrics['accuracy']:.2%}")
-            st.metric("F1-Score (Macro)", f"{test_metrics['f1_macro']:.4f}")
+            st.markdown("### Ensemble de Test")
+            st.metric("Précision", f"{test_metrics['accuracy']:.2%}")
+            st.metric("Score F1 (Macro)", f"{test_metrics['f1_macro']:.4f}")
         
-        st.subheader("Confusion Matrix (Test Set)")
+        st.subheader("Matrice de Confusion (Ensemble de Test)")
         
         fig, ax = plt.subplots(figsize=(10, 8))
         cm = test_metrics['confusion_matrix']
@@ -1937,9 +1937,9 @@ def show_mnist_training():
                yticks=np.arange(cm.shape[0]),
                xticklabels=class_names,
                yticklabels=class_names,
-               ylabel='True Label',
-               xlabel='Predicted Label',
-               title='MNIST Confusion Matrix')
+               ylabel='Étiquette Vraie',
+               xlabel='Étiquette Prédite',
+               title='Matrice de Confusion MNIST')
         
         thresh = cm.max() / 2.
         for i in range(cm.shape[0]):
@@ -1953,7 +1953,7 @@ def show_mnist_training():
         st.pyplot(fig)
         plt.close()
         
-        st.subheader("Sample Predictions")
+        st.subheader("Exemples de Prédictions")
         
         np.random.seed(42)
         sample_indices = np.random.choice(len(y_test), min(10, len(y_test)), replace=False)
@@ -1970,10 +1970,10 @@ def show_mnist_training():
             axes[row, col].imshow(img, cmap='gray')
             axes[row, col].axis('off')
             color = 'green' if correct else 'red'
-            axes[row, col].set_title(f'True: {true_label}, Pred: {pred_label}', 
+            axes[row, col].set_title(f'Vrai : {true_label}, Préd : {pred_label}', 
                                       color=color, fontsize=10)
         
-        plt.suptitle('Sample Predictions (Green=Correct, Red=Wrong)', fontsize=12)
+        plt.suptitle('Exemples de Prédictions (Vert=Correct, Rouge=Faux)', fontsize=12)
         plt.tight_layout()
         st.pyplot(fig)
         plt.close()
@@ -2001,50 +2001,50 @@ def show_mnist_training():
             training_time_seconds=None
         )
         
-        st.success(f"Training complete! Results saved to database (Run #{run_id}).")
+        st.success(f"Entraînement terminé ! Résultats sauvegardés dans la base de données (Exécution #{run_id}).")
         st.balloons()
 
 
 def show_training_history():
-    st.header("Training History")
+    st.header("Historique d'Entraînement")
     
     st.markdown("""
-    View and analyze your previous training runs stored in the database.
-    Compare different model configurations and their performance.
+    Visualisez et analysez vos exécutions d'entraînement précédentes stockées dans la base de données.
+    Comparez différentes configurations de modèles et leurs performances.
     """)
     
     history = get_training_history(limit=20)
     
     if not history:
-        st.info("No training runs found. Train a model on the Iris dataset to see your history here.")
+        st.info("Aucune exécution d'entraînement trouvée. Entraînez un modèle sur le jeu de données Iris pour voir votre historique ici.")
         return
     
-    st.subheader(f"Recent Training Runs ({len(history)} total)")
+    st.subheader(f"Exécutions d'Entraînement Récentes ({len(history)} au total)")
     
     history_df = []
     for run in history:
         history_df.append({
             'ID': run['id'],
-            'Timestamp': run['timestamp'][:19].replace('T', ' '),
-            'Dataset': run['dataset_name'],
+            'Horodatage': run['timestamp'][:19].replace('T', ' '),
+            'Jeu de Données': run['dataset_name'],
             'Architecture': ' → '.join(map(str, run['layer_sizes'])),
             'Activation': run['activation'],
-            'LR': f"{run['learning_rate']:.4f}",
-            'Epochs': run['epochs'],
-            'Train Acc': f"{run['final_train_accuracy']:.2%}" if run['final_train_accuracy'] else 'N/A',
-            'Test Acc': f"{run['final_test_accuracy']:.2%}" if run['final_test_accuracy'] else 'N/A',
+            'TA': f"{run['learning_rate']:.4f}",
+            'Époques': run['epochs'],
+            'Préc. Entr.': f"{run['final_train_accuracy']:.2%}" if run['final_train_accuracy'] else 'N/A',
+            'Préc. Test': f"{run['final_test_accuracy']:.2%}" if run['final_test_accuracy'] else 'N/A',
             'F1': f"{run['f1_score']:.4f}" if run['f1_score'] else 'N/A'
         })
     
     st.dataframe(history_df, use_container_width=True)
     
-    st.subheader("View Run Details")
+    st.subheader("Voir les Détails de l'Exécution")
     
     run_ids = [run['id'] for run in history]
     selected_run_id = st.selectbox(
-        "Select a training run to view details:",
+        "Sélectionner une exécution d'entraînement pour voir les détails :",
         options=run_ids,
-        format_func=lambda x: f"Run #{x} - {next((r['timestamp'][:19].replace('T', ' ') for r in history if r['id'] == x), '')}"
+        format_func=lambda x: f"Exécution #{x} - {next((r['timestamp'][:19].replace('T', ' ') for r in history if r['id'] == x), '')}"
     )
     
     if selected_run_id:
@@ -2054,45 +2054,45 @@ def show_training_history():
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown("### Model Configuration")
-                st.write(f"**Dataset:** {run_details['dataset_name']}")
-                st.write(f"**Model:** {run_details['model_type']}")
-                st.write(f"**Architecture:** {' → '.join(map(str, run_details['layer_sizes']))}")
-                st.write(f"**Activation:** {run_details['activation']}")
-                st.write(f"**Learning Rate:** {run_details['learning_rate']}")
-                st.write(f"**Epochs:** {run_details['epochs']}")
-                st.write(f"**Batch Size:** {run_details['batch_size']}")
+                st.markdown("### Configuration du Modèle")
+                st.write(f"**Jeu de Données :** {run_details['dataset_name']}")
+                st.write(f"**Modèle :** {run_details['model_type']}")
+                st.write(f"**Architecture :** {' → '.join(map(str, run_details['layer_sizes']))}")
+                st.write(f"**Activation :** {run_details['activation']}")
+                st.write(f"**Taux d'Apprentissage :** {run_details['learning_rate']}")
+                st.write(f"**Époques :** {run_details['epochs']}")
+                st.write(f"**Taille du Lot :** {run_details['batch_size']}")
             
             with col2:
-                st.markdown("### Performance Metrics")
+                st.markdown("### Métriques de Performance")
                 if run_details['final_train_accuracy']:
-                    st.metric("Training Accuracy", f"{run_details['final_train_accuracy']:.2%}")
+                    st.metric("Précision Entraînement", f"{run_details['final_train_accuracy']:.2%}")
                 if run_details['final_test_accuracy']:
-                    st.metric("Test Accuracy", f"{run_details['final_test_accuracy']:.2%}")
+                    st.metric("Précision Test", f"{run_details['final_test_accuracy']:.2%}")
                 if run_details['f1_score']:
-                    st.metric("F1 Score", f"{run_details['f1_score']:.4f}")
+                    st.metric("Score F1", f"{run_details['f1_score']:.4f}")
             
             if run_details['train_loss_history'] and run_details['train_accuracy_history']:
-                st.markdown("### Training Curves")
+                st.markdown("### Courbes d'Entraînement")
                 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
                 
                 epochs_range = range(len(run_details['train_loss_history']))
                 
-                axes[0].plot(epochs_range, run_details['train_loss_history'], label='Training Loss')
+                axes[0].plot(epochs_range, run_details['train_loss_history'], label='Perte Entraînement')
                 if run_details['val_loss_history']:
-                    axes[0].plot(epochs_range, run_details['val_loss_history'], label='Validation Loss')
-                axes[0].set_title('Loss over Epochs')
-                axes[0].set_xlabel('Epoch')
-                axes[0].set_ylabel('Loss')
+                    axes[0].plot(epochs_range, run_details['val_loss_history'], label='Perte Validation')
+                axes[0].set_title('Perte par Époque')
+                axes[0].set_xlabel('Époque')
+                axes[0].set_ylabel('Perte')
                 axes[0].legend()
                 axes[0].grid(True, alpha=0.3)
                 
-                axes[1].plot(epochs_range, run_details['train_accuracy_history'], label='Training Accuracy')
+                axes[1].plot(epochs_range, run_details['train_accuracy_history'], label='Précision Entraînement')
                 if run_details['val_accuracy_history']:
-                    axes[1].plot(epochs_range, run_details['val_accuracy_history'], label='Validation Accuracy')
-                axes[1].set_title('Accuracy over Epochs')
-                axes[1].set_xlabel('Epoch')
-                axes[1].set_ylabel('Accuracy')
+                    axes[1].plot(epochs_range, run_details['val_accuracy_history'], label='Précision Validation')
+                axes[1].set_title('Précision par Époque')
+                axes[1].set_xlabel('Époque')
+                axes[1].set_ylabel('Précision')
                 axes[1].legend()
                 axes[1].grid(True, alpha=0.3)
                 
@@ -2101,7 +2101,7 @@ def show_training_history():
                 plt.close()
             
             if run_details['confusion_matrix'] is not None:
-                st.markdown("### Confusion Matrix")
+                st.markdown("### Matrice de Confusion")
                 cm = run_details['confusion_matrix']
                 class_names = ['setosa', 'versicolor', 'virginica']
                 
@@ -2113,8 +2113,8 @@ def show_training_history():
                        yticks=np.arange(cm.shape[0]),
                        xticklabels=class_names,
                        yticklabels=class_names,
-                       ylabel='True Label',
-                       xlabel='Predicted Label')
+                       ylabel='Étiquette Vraie',
+                       xlabel='Étiquette Prédite')
                 
                 plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
                 
@@ -2129,12 +2129,12 @@ def show_training_history():
                 st.pyplot(fig)
                 plt.close()
             
-            if st.button("Delete This Run", type="secondary"):
+            if st.button("Supprimer Cette Exécution", type="secondary"):
                 if delete_training_run(selected_run_id):
-                    st.success(f"Run #{selected_run_id} deleted successfully.")
+                    st.success(f"Exécution #{selected_run_id} supprimée avec succès.")
                     st.rerun()
                 else:
-                    st.error("Failed to delete the run.")
+                    st.error("Échec de la suppression de l'exécution.")
 
 
 if __name__ == "__main__":
