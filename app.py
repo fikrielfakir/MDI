@@ -5,8 +5,10 @@ A comprehensive educational tool for understanding neural networks.
 
 import streamlit as st
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import time
+import io
 from activations import ActivationFunctions, visualize_activations
 from perceptron import Perceptron, demo_logic_gates, demonstrate_xor_problem
 from mlp import MLP, solve_xor_with_mlp
@@ -76,37 +78,225 @@ def show_introduction():
     and function of biological neural networks in the brain. Just as our brains consist of 
     billions of interconnected neurons that process information, ANNs consist of artificial 
     neurons (also called nodes or units) organized in layers.
-    
-    ### Biological Inspiration
-    
-    In the brain, a neuron:
-    1. Receives electrical signals from other neurons through **dendrites**
-    2. Processes these signals in the **cell body**
-    3. If the combined signal exceeds a threshold, it fires an output through the **axon**
-    4. The output connects to other neurons through **synapses**
-    
-    Similarly, an artificial neuron:
-    1. Receives inputs from other neurons or raw data
-    2. Computes a weighted sum of these inputs
-    3. Applies an activation function to produce an output
-    4. Passes the output to the next layer
     """)
     
-    st.markdown("""
-    ### Mathematical Model of a Neuron
+    st.markdown("---")
     
-    For a single neuron with inputs $x_1, x_2, ..., x_n$:
+    st.subheader("The Building Blocks of Neural Networks")
     
-    $$z = \\sum_{i=1}^{n} w_i x_i + b = w_1 x_1 + w_2 x_2 + ... + w_n x_n + b$$
+    concept_tabs = st.tabs(["Neurons", "Weights & Biases", "Activation Functions", "Loss Functions", "Optimizers"])
     
-    $$a = f(z)$$
+    with concept_tabs[0]:
+        st.markdown("""
+        ## Neurons - The Heart of Neural Networks
+        
+        Neurons are at the heart of any neural network, including the perceptron. These digital entities 
+        receive inputs, apply weights, and produce an output. Neurons are the building blocks through 
+        which information flows in a neural network. Just as neurons in our brains communicate, 
+        these fundamental blocks communicate in the language of numbers.
+        
+        ### Biological Inspiration
+        
+        In the brain, a neuron:
+        1. Receives electrical signals from other neurons through **dendrites**
+        2. Processes these signals in the **cell body**
+        3. If the combined signal exceeds a threshold, it fires an output through the **axon**
+        4. The output connects to other neurons through **synapses**
+        
+        ### Artificial Neuron Model
+        
+        Similarly, an artificial neuron:
+        1. Receives inputs from other neurons or raw data
+        2. Computes a weighted sum of these inputs
+        3. Applies an activation function to produce an output
+        4. Passes the output to the next layer
+        
+        ### Mathematical Model
+        
+        For a single neuron with inputs $x_1, x_2, ..., x_n$:
+        
+        $$z = \\sum_{i=1}^{n} w_i x_i + b = w_1 x_1 + w_2 x_2 + ... + w_n x_n + b$$
+        
+        $$a = f(z)$$
+        
+        Where:
+        - $w_i$ are the **weights** (connection strengths)
+        - $b$ is the **bias** (threshold adjustment)
+        - $f$ is the **activation function** (introduces non-linearity)
+        - $a$ is the **activation** (output of the neuron)
+        """)
+        
+        st.markdown("""
+        ```
+        Input Signals      Weights      Neuron Processing      Output
+        
+            x₁ ──────────── w₁ ──┐
+                                 │
+            x₂ ──────────── w₂ ──┼──> [Σ + b] ──> [f(z)] ──> Output
+                                 │
+            x₃ ──────────── w₃ ──┘
+        ```
+        """)
     
-    Where:
-    - $w_i$ are the **weights** (connection strengths)
-    - $b$ is the **bias** (threshold adjustment)
-    - $f$ is the **activation function** (introduces non-linearity)
-    - $a$ is the **activation** (output of the neuron)
-    """)
+    with concept_tabs[1]:
+        st.markdown("""
+        ## Weights and Biases
+        
+        Weights and biases are the **adjustable parameters** in the network that influence the 
+        importance of input features and establish a threshold for activation.
+        
+        ### Weights
+        
+        Each input data feature is given a certain **weight**, indicating its importance in the decision:
+        
+        - **High weight**: The input has strong influence on the output
+        - **Low weight**: The input has weak influence on the output
+        - **Negative weight**: The input has an inverse relationship with the output
+        
+        During training, the network learns which features are most important by adjusting these weights.
+        
+        ### Biases
+        
+        Biases act as the **minimum requirement** for a feature to contribute to the output:
+        
+        - A bias shifts the activation function horizontally
+        - It allows neurons to activate even when all inputs are zero
+        - Biases provide flexibility in the decision boundary
+        
+        ### The Learning Process
+        
+        Adjusting weights and biases during model training refines the network's ability to make 
+        accurate predictions. The goal is to find the optimal combination that minimizes the 
+        prediction error.
+        
+        $$\\text{Output} = f\\left(\\sum_{i} w_i \\cdot x_i + b\\right)$$
+        """)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("""
+            **Weight Interpretation:**
+            | Weight Value | Meaning |
+            |-------------|---------|
+            | w > 0 | Positive correlation |
+            | w < 0 | Negative correlation |
+            | w ≈ 0 | Feature has little impact |
+            | |w| large | Strong influence |
+            """)
+        with col2:
+            st.markdown("""
+            **Bias Role:**
+            - Acts as a threshold
+            - Enables activation shift
+            - Provides flexibility
+            - Independent of input
+            """)
+    
+    with concept_tabs[2]:
+        st.markdown("""
+        ## Activation Functions
+        
+        Activation functions, such as the step function in the perceptron, determine whether 
+        the neuron **fires**. In other words, they decide whether the information flowing through 
+        should be allowed to contribute to the output.
+        
+        ### The Threshold Concept
+        
+        Picture it as a threshold—if the incoming data is above a certain level, the perceptron 
+        'fires' or produces an output; otherwise, it remains silent. This binary decision-making 
+        process showcases the essence of activation functions in shaping the output of our digital neurons.
+        
+        ### Why Non-linearity Matters
+        
+        Without activation functions, a neural network would just be a **linear transformation**:
+        
+        $$y = W_2 \\cdot (W_1 \\cdot x + b_1) + b_2 = W_{combined} \\cdot x + b_{combined}$$
+        
+        No matter how many layers we stack, the result would still be linear! Activation functions 
+        introduce **non-linearity**, enabling networks to learn complex patterns.
+        
+        ### Common Activation Functions
+        
+        | Function | Formula | Output Range | Use Case |
+        |----------|---------|--------------|----------|
+        | **Sigmoid** | $\\sigma(z) = \\frac{1}{1+e^{-z}}$ | (0, 1) | Binary classification, LSTM gates |
+        | **Tanh** | $\\tanh(z) = \\frac{e^z - e^{-z}}{e^z + e^{-z}}$ | (-1, 1) | Hidden layers, RNNs |
+        | **ReLU** | $\\max(0, z)$ | [0, ∞) | Most hidden layers |
+        | **Softmax** | $\\frac{e^{z_i}}{\\sum_j e^{z_j}}$ | (0, 1), sum=1 | Multi-class output |
+        """)
+    
+    with concept_tabs[3]:
+        st.markdown("""
+        ## Loss Functions
+        
+        Loss functions **quantify the difference** between the predicted output and the actual target. 
+        The objective is to minimize this difference during the training process.
+        
+        ### The Concept of Error
+        
+        In the context of neural networks, the concept of error or loss becomes evident. The network 
+        learns by **reducing the difference** between its prediction and the actual target, laying 
+        the groundwork for understanding more sophisticated loss functions in advanced architectures.
+        
+        ### Common Loss Functions
+        
+        | Loss Function | Formula | Use Case |
+        |--------------|---------|----------|
+        | **Mean Squared Error (MSE)** | $\\frac{1}{n}\\sum(y - \\hat{y})^2$ | Regression problems |
+        | **Cross-Entropy** | $-\\sum y \\log(\\hat{y})$ | Classification problems |
+        | **Binary Cross-Entropy** | $-[y\\log(\\hat{y}) + (1-y)\\log(1-\\hat{y})]$ | Binary classification |
+        
+        ### How Loss Guides Learning
+        
+        1. **Forward Pass**: Network makes a prediction
+        2. **Loss Calculation**: Compare prediction to actual value
+        3. **Backward Pass**: Calculate gradients of loss with respect to weights
+        4. **Update**: Adjust weights to reduce loss
+        
+        The goal of training is to find weights that **minimize the loss function**.
+        """)
+        
+        st.info("Lower loss = Better predictions. The training process iteratively reduces the loss until the model performs well.")
+    
+    with concept_tabs[4]:
+        st.markdown("""
+        ## Optimizers
+        
+        Although more straightforward in the perceptron context, optimizers are crucial for 
+        **adjusting weights and biases** based on the computed loss. They fine-tune the model 
+        parameters to minimize the loss and improve overall performance.
+        
+        ### The Role of Optimizers
+        
+        This mechanism hints at the broader optimization techniques in more complex deep learning 
+        architectures. Optimizers determine:
+        
+        - **How fast** to update weights (learning rate)
+        - **Which direction** to move (gradient direction)
+        - **How much** to adjust each parameter
+        
+        ### Popular Optimization Techniques
+        
+        | Optimizer | Description | Characteristics |
+        |-----------|-------------|-----------------|
+        | **SGD** (Stochastic Gradient Descent) | Basic gradient descent with random samples | Simple, may oscillate |
+        | **Momentum** | Adds velocity to gradient updates | Faster convergence |
+        | **Adam** | Adaptive learning rates per parameter | Most popular, works well |
+        | **RMSprop** | Adapts learning rate based on recent gradients | Good for RNNs |
+        
+        ### Gradient Descent Visualization
+        
+        Imagine rolling a ball down a hill to find the lowest point (minimum loss):
+        
+        - **Learning Rate**: How big each step is
+        - **Gradient**: The direction of steepest descent
+        - **Momentum**: The ball's velocity from previous steps
+        
+        """)
+        
+        st.warning("Choosing the right optimizer and learning rate is crucial. Too large a learning rate may overshoot the minimum; too small may take forever to converge.")
+    
+    st.markdown("---")
     
     col1, col2 = st.columns(2)
     
@@ -121,6 +311,9 @@ def show_introduction():
         3. **Output Layer**: Produces predictions
         
         A network with multiple hidden layers is called a **Deep Neural Network**.
+        
+        Each node in the network represents a neuron and is connected to nodes in adjacent layers. 
+        These connections are associated with weights, which determine the strength of the connection.
         """)
     
     with col2:
@@ -133,6 +326,8 @@ def show_introduction():
         2. **Multiple layers**: Enable hierarchical feature learning
         3. **Gradient-based learning**: Automatically adjust weights
         4. **Universal approximation**: Can approximate any continuous function
+        
+        Their capacity to learn from large datasets enables them to generalize well to new, unseen data.
         """)
     
     st.markdown("""
@@ -146,6 +341,8 @@ def show_introduction():
     4. **Gradient Descent**: Adjust weights to reduce error
     
     This process repeats thousands of times until the network learns the patterns in the data.
+    The **backpropagation technique** improves the network by propagating error signals backward 
+    through the layers, allowing each weight to be adjusted proportionally to its contribution to the error.
     """)
 
 
@@ -536,8 +733,8 @@ def show_iris_prediction():
     st.markdown("""
     ## Predict Iris Species
     
-    Use a trained neural network to classify iris flowers based on their measurements,
-    or upload an image for visual classification.
+    Use a trained neural network to classify iris flowers based on their measurements.
+    Choose from single measurement input, batch CSV upload, or multi-image upload for classification.
     """)
     
     saved_models = get_saved_model_names()
@@ -546,7 +743,7 @@ def show_iris_prediction():
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.subheader("Train & Save Model")
+        st.subheader("Model Status")
         
         if st.button("Train Iris Classifier", type="primary"):
             with st.spinner("Training model..."):
@@ -557,13 +754,13 @@ def show_iris_prediction():
                 X_test_scaled = scaler.transform(X_test)
                 
                 mlp = MLP(
-                    layer_sizes=[4, 16, 8, 3],
+                    layer_sizes=[4, 32, 16, 3],
                     learning_rate=0.01,
                     activation='relu',
                     weight_init='he'
                 )
                 
-                mlp.fit(X_train_scaled, y_train, epochs=500, batch_size=16, verbose=False)
+                mlp.fit(X_train_scaled, y_train, epochs=800, batch_size=16, verbose=False)
                 
                 y_pred = mlp.predict(X_test_scaled)
                 accuracy = np.mean(y_pred == y_test)
@@ -581,12 +778,12 @@ def show_iris_prediction():
                 st.rerun()
         
         if iris_models:
-            st.info(f"Saved model: {iris_models[0][0]} (Accuracy: {iris_models[0][1]:.1%})")
+            st.success(f"Active Model: {iris_models[0][0]} (Accuracy: {iris_models[0][1]:.1%})")
         else:
             st.warning("No trained model found. Click 'Train Iris Classifier' first.")
     
     with col2:
-        st.subheader("Iris Flower Images")
+        st.subheader("Iris Flower Reference")
         iris_images = sorted([f for f in os.listdir('attached_assets') if f.startswith('iris-') and f.endswith('.jpg')])
         if iris_images[:6]:
             cols = st.columns(3)
@@ -598,11 +795,11 @@ def show_iris_prediction():
     
     prediction_mode = st.radio(
         "Prediction Mode:",
-        ["Measurement Input", "Image Upload"],
+        ["Single Measurement", "CSV Batch Upload", "Multi-Image Upload"],
         horizontal=True
     )
     
-    if prediction_mode == "Measurement Input":
+    if prediction_mode == "Single Measurement":
         st.subheader("Enter Flower Measurements")
         
         col1, col2, col3, col4 = st.columns(4)
@@ -616,7 +813,7 @@ def show_iris_prediction():
         with col4:
             petal_width = st.number_input("Petal Width (cm)", min_value=0.0, max_value=10.0, value=0.2, step=0.1)
         
-        if st.button("Predict Species"):
+        if st.button("Predict Species", key="single_predict"):
             model_data = load_trained_model('iris_classifier')
             
             if model_data is None:
@@ -643,27 +840,241 @@ def show_iris_prediction():
                 st.success(f"**Predicted Species: {predicted_class}**")
                 
                 st.markdown("#### Confidence Scores:")
+                prob_cols = st.columns(3)
+                colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
                 for i, (name, prob) in enumerate(zip(class_names, probabilities)):
-                    st.progress(float(prob), text=f"{name}: {prob:.1%}")
+                    with prob_cols[i]:
+                        st.metric(name, f"{prob:.1%}")
+                        st.progress(float(prob))
+    
+    elif prediction_mode == "CSV Batch Upload":
+        st.subheader("Upload CSV for Batch Prediction")
+        
+        st.markdown("""
+        **Required CSV Format:**
+        ```
+        Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
+        1,5.1,3.5,1.4,0.2,Iris-setosa
+        2,4.9,3.0,1.4,0.2,Iris-setosa
+        ...
+        ```
+        The `Species` column is optional - if provided, it will be used to calculate accuracy.
+        """)
+        
+        uploaded_csv = st.file_uploader("Upload CSV file", type=['csv'], key="csv_uploader")
+        
+        if uploaded_csv is not None:
+            try:
+                df = pd.read_csv(uploaded_csv)
+                st.write(f"**Loaded {len(df)} samples**")
+                st.dataframe(df.head(10), use_container_width=True)
+                
+                required_cols = ['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm']
+                missing_cols = [col for col in required_cols if col not in df.columns]
+                
+                if missing_cols:
+                    st.error(f"Missing required columns: {missing_cols}")
+                else:
+                    if st.button("Run Batch Prediction", type="primary"):
+                        model_data = load_trained_model('iris_classifier')
+                        
+                        if model_data is None:
+                            st.error("No trained model found. Please train the model first.")
+                        else:
+                            mlp = MLP.from_saved_weights(
+                                layer_sizes=model_data['layer_sizes'],
+                                activation=model_data['activation'],
+                                weights=model_data['weights'],
+                                biases=model_data['biases']
+                            )
+                            
+                            features = df[required_cols].values
+                            
+                            if model_data['scaler_mean'] is not None:
+                                features = (features - model_data['scaler_mean']) / model_data['scaler_std']
+                            
+                            predictions = mlp.predict(features)
+                            probabilities = mlp.predict_proba(features)
+                            
+                            class_names = model_data['class_names']
+                            predicted_classes = [class_names[p] for p in predictions]
+                            
+                            results_df = df.copy()
+                            results_df['Predicted_Species'] = predicted_classes
+                            results_df['Confidence'] = [f"{max(prob)*100:.1f}%" for prob in probabilities]
+                            
+                            for i, name in enumerate(class_names):
+                                results_df[f'Prob_{name}'] = [f"{prob[i]*100:.1f}%" for prob in probabilities]
+                            
+                            if 'Species' in df.columns:
+                                species_map = {
+                                    'Iris-setosa': 'setosa',
+                                    'Iris-versicolor': 'versicolor', 
+                                    'Iris-virginica': 'virginica',
+                                    'setosa': 'setosa',
+                                    'versicolor': 'versicolor',
+                                    'virginica': 'virginica'
+                                }
+                                actual_mapped = df['Species'].map(species_map).fillna(df['Species'])
+                                results_df['Correct'] = actual_mapped == results_df['Predicted_Species']
+                                accuracy = results_df['Correct'].mean()
+                                
+                                st.success(f"Batch Prediction Complete! Accuracy: {accuracy:.1%}")
+                            else:
+                                st.success("Batch Prediction Complete!")
+                            
+                            st.subheader("Prediction Results")
+                            st.dataframe(results_df, use_container_width=True)
+                            
+                            st.subheader("Prediction Summary")
+                            summary_counts = pd.Series(predicted_classes).value_counts()
+                            
+                            col1, col2 = st.columns([1, 1])
+                            with col1:
+                                st.markdown("**Species Distribution:**")
+                                for species, count in summary_counts.items():
+                                    st.write(f"- {species}: {count} ({count/len(predictions)*100:.1f}%)")
+                            
+                            with col2:
+                                fig, ax = plt.subplots(figsize=(6, 4))
+                                colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
+                                ax.pie(summary_counts.values, labels=summary_counts.index, autopct='%1.1f%%', colors=colors[:len(summary_counts)])
+                                ax.set_title('Predicted Species Distribution')
+                                st.pyplot(fig)
+                                plt.close()
+                            
+                            csv_buffer = io.StringIO()
+                            results_df.to_csv(csv_buffer, index=False)
+                            st.download_button(
+                                label="Download Results as CSV",
+                                data=csv_buffer.getvalue(),
+                                file_name="iris_predictions.csv",
+                                mime="text/csv"
+                            )
+                            
+            except Exception as e:
+                st.error(f"Error reading CSV: {str(e)}")
     
     else:
-        st.subheader("Upload Iris Flower Image")
-        st.info("Upload an image of an iris flower for classification. The model will analyze the image to identify the species.")
+        st.subheader("Upload Multiple Iris Flower Images")
+        st.info("Upload multiple images of iris flowers for classification. The model will analyze each image to help identify the species.")
         
-        uploaded_file = st.file_uploader("Choose an iris flower image", type=['jpg', 'jpeg', 'png'])
+        uploaded_files = st.file_uploader(
+            "Choose iris flower images", 
+            type=['jpg', 'jpeg', 'png'],
+            accept_multiple_files=True,
+            key="multi_image_uploader"
+        )
         
-        if uploaded_file is not None:
-            st.image(uploaded_file, caption="Uploaded Image", width=300)
+        if uploaded_files:
+            st.write(f"**Uploaded {len(uploaded_files)} images**")
             
-            st.warning("Image-based classification requires a pre-trained CNN model. For this educational demo, the measurement-based prediction is recommended.")
+            cols_per_row = 4
+            for i in range(0, len(uploaded_files), cols_per_row):
+                cols = st.columns(cols_per_row)
+                for j, col in enumerate(cols):
+                    if i + j < len(uploaded_files):
+                        with col:
+                            st.image(uploaded_files[i + j], caption=f"Image {i+j+1}", use_container_width=True)
             
+            st.markdown("---")
+            st.subheader("Manual Classification Input")
             st.markdown("""
-            **Note:** Image classification for iris flowers would typically require:
-            - A Convolutional Neural Network (CNN)
-            - A large dataset of labeled iris flower images
-            - Transfer learning from models like ResNet or VGG
+            Since image-based classification requires a CNN model, please enter measurements for each uploaded image.
+            This helps correlate visual features with measurement data.
+            """)
             
-            The current implementation focuses on measurement-based classification using an MLP.
+            if 'image_measurements' not in st.session_state:
+                st.session_state.image_measurements = []
+            
+            for idx, uploaded_file in enumerate(uploaded_files):
+                with st.expander(f"Enter measurements for Image {idx + 1}: {uploaded_file.name}"):
+                    cols = st.columns([1, 1, 1, 1, 1])
+                    with cols[0]:
+                        st.image(uploaded_file, use_container_width=True)
+                    with cols[1]:
+                        sl = st.number_input(f"Sepal Length", min_value=0.0, max_value=10.0, value=5.0, step=0.1, key=f"sl_{idx}")
+                    with cols[2]:
+                        sw = st.number_input(f"Sepal Width", min_value=0.0, max_value=10.0, value=3.0, step=0.1, key=f"sw_{idx}")
+                    with cols[3]:
+                        pl = st.number_input(f"Petal Length", min_value=0.0, max_value=10.0, value=1.5, step=0.1, key=f"pl_{idx}")
+                    with cols[4]:
+                        pw = st.number_input(f"Petal Width", min_value=0.0, max_value=10.0, value=0.2, step=0.1, key=f"pw_{idx}")
+            
+            if st.button("Classify All Images", type="primary"):
+                model_data = load_trained_model('iris_classifier')
+                
+                if model_data is None:
+                    st.error("No trained model found. Please train the model first.")
+                else:
+                    mlp = MLP.from_saved_weights(
+                        layer_sizes=model_data['layer_sizes'],
+                        activation=model_data['activation'],
+                        weights=model_data['weights'],
+                        biases=model_data['biases']
+                    )
+                    
+                    results = []
+                    for idx, uploaded_file in enumerate(uploaded_files):
+                        sl = st.session_state.get(f"sl_{idx}", 5.0)
+                        sw = st.session_state.get(f"sw_{idx}", 3.0)
+                        pl = st.session_state.get(f"pl_{idx}", 1.5)
+                        pw = st.session_state.get(f"pw_{idx}", 0.2)
+                        
+                        features = np.array([[sl, sw, pl, pw]])
+                        
+                        if model_data['scaler_mean'] is not None:
+                            features = (features - model_data['scaler_mean']) / model_data['scaler_std']
+                        
+                        prediction = mlp.predict(features)[0]
+                        probabilities = mlp.predict_proba(features)[0]
+                        
+                        class_names = model_data['class_names']
+                        predicted_class = class_names[prediction]
+                        confidence = max(probabilities)
+                        
+                        results.append({
+                            'image_name': uploaded_file.name,
+                            'predicted_species': predicted_class,
+                            'confidence': confidence,
+                            'probabilities': probabilities
+                        })
+                    
+                    st.success(f"Classified {len(results)} images!")
+                    
+                    st.subheader("Classification Results")
+                    cols_per_row = 3
+                    for i in range(0, len(results), cols_per_row):
+                        cols = st.columns(cols_per_row)
+                        for j, col in enumerate(cols):
+                            if i + j < len(results):
+                                result = results[i + j]
+                                with col:
+                                    st.image(uploaded_files[i + j], use_container_width=True)
+                                    st.markdown(f"**{result['predicted_species']}**")
+                                    st.write(f"Confidence: {result['confidence']:.1%}")
+                    
+                    results_df = pd.DataFrame([{
+                        'Image': r['image_name'],
+                        'Predicted Species': r['predicted_species'],
+                        'Confidence': f"{r['confidence']*100:.1f}%"
+                    } for r in results])
+                    
+                    csv_buffer = io.StringIO()
+                    results_df.to_csv(csv_buffer, index=False)
+                    st.download_button(
+                        label="Download Results as CSV",
+                        data=csv_buffer.getvalue(),
+                        file_name="image_classification_results.csv",
+                        mime="text/csv"
+                    )
+            
+            st.markdown("---")
+            st.markdown("""
+            **Note:** For automated image classification, a Convolutional Neural Network (CNN) would be required:
+            - A CNN can learn visual features directly from images
+            - Transfer learning from pre-trained models (ResNet, VGG) could be applied
+            - A large dataset of labeled iris flower images would improve accuracy
             """)
 
 
