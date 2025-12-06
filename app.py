@@ -9,6 +9,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 import io
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 from activations import ActivationFunctions, visualize_activations
 from perceptron import Perceptron, demo_logic_gates, demonstrate_xor_problem
 from mlp import MLP, solve_xor_with_mlp
@@ -33,10 +40,13 @@ st.set_page_config(
 )
 
 def main():
+    logger.info("Application démarrée - Apprentissage Profond de Zéro")
     st.title("Apprentissage Profond de Zéro")
     st.markdown("### Un Guide Interactif sur les Réseaux de Neurones")
     
+    logger.info("Initialisation de la base de données...")
     init_database()
+    logger.info("Base de données initialisée avec succès")
     
     tabs = st.tabs([
         "Introduction aux RNA",
@@ -742,6 +752,7 @@ def show_mlp():
 
 
 def show_iris_combined():
+    logger.info("Accès à l'onglet Prédiction et Reconnaissance Iris")
     st.header("Prédiction et Reconnaissance Iris")
     
     st.markdown("""
