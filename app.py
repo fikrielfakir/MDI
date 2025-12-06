@@ -1399,11 +1399,8 @@ def show_image_model_training():
                 activation=activation
             )
             
-            y_train_onehot = one_hot_encode(y_train, 3)
-            y_test_onehot = one_hot_encode(y_test, 3)
-            
             status_text.text("Training in progress...")
-            mlp.fit(X_train_norm, y_train_onehot, epochs=epochs, batch_size=batch_size, verbose=False)
+            mlp.fit(X_train_norm, y_train, epochs=epochs, batch_size=batch_size, verbose=False)
             
             progress_bar.progress(1.0)
             
