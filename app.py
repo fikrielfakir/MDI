@@ -6,11 +6,16 @@ A comprehensive educational tool for understanding neural networks.
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 from activations import ActivationFunctions, visualize_activations
 from perceptron import Perceptron, demo_logic_gates, demonstrate_xor_problem
 from mlp import MLP, solve_xor_with_mlp
 from data_utils import (load_iris_dataset, compute_metrics, 
                         format_confusion_matrix, one_hot_encode)
+from db_utils import (init_database, import_iris_from_csv, get_iris_sample_count,
+                      save_training_run, get_training_history, get_training_run_details,
+                      delete_training_run)
+import os
 
 st.set_page_config(
     page_title="Deep Learning from Scratch",
@@ -22,12 +27,15 @@ def main():
     st.title("Deep Learning from Scratch")
     st.markdown("### An Interactive Guide to Neural Networks")
     
+    init_database()
+    
     tabs = st.tabs([
         "Introduction to ANNs",
         "Activation Functions", 
         "Perceptron",
         "Multi-Layer Perceptron",
-        "Train on Iris Dataset"
+        "Train on Iris Dataset",
+        "Training History"
     ])
     
     with tabs[0]:
@@ -44,6 +52,9 @@ def main():
     
     with tabs[4]:
         show_iris_training()
+    
+    with tabs[5]:
+        show_training_history()
 
 
 def show_introduction():
@@ -521,6 +532,31 @@ def show_iris_training():
     - **3 Classes**: setosa, versicolor, virginica (50 samples each)
     """)
     
+    db_sample_count = get_iris_sample_count()
+    if db_sample_count > 0:
+        st.info(f"Database contains {db_sample_count} Iris samples loaded from CSV.")
+    
+    st.sidebar.header("Data Source")
+    
+    data_source = st.sidebar.radio(
+        "Load Iris data from:",
+        ["sklearn (built-in)", "Database (CSV import)"],
+        help="Choose whether to load from sklearn or the database"
+    )
+    
+    if data_source == "Database (CSV import)" and db_sample_count == 0:
+        if os.path.exists('attached_assets/Iris_1765047715889.csv'):
+            if st.sidebar.button("Import CSV to Database"):
+                try:
+                    count = import_iris_from_csv('attached_assets/Iris_1765047715889.csv')
+                    st.sidebar.success(f"Imported {count} samples to database!")
+                    st.rerun()
+                except Exception as e:
+                    st.sidebar.error(f"Error importing: {e}")
+        else:
+            st.sidebar.warning("No CSV file found. Using sklearn instead.")
+            data_source = "sklearn (built-in)"
+    
     st.sidebar.header("Model Configuration")
     
     hidden_layer_1 = st.sidebar.slider(
@@ -569,7 +605,8 @@ def show_iris_training():
     )
     
     if st.sidebar.button("Train Model", type="primary"):
-        X_train, X_test, y_train, y_test, feature_names, class_names = load_iris_dataset()
+        source = 'database' if 'Database' in data_source else 'sklearn'
+        X_train, X_test, y_train, y_test, feature_names, class_names = load_iris_dataset(source=source)
         
         if hidden_layer_2 > 0:
             layer_sizes = [4, hidden_layer_1, hidden_layer_2, 3]
@@ -711,7 +748,162 @@ def show_iris_training():
         
         st.dataframe(samples_data, use_container_width=True)
         
-        st.success("Training complete! The model has been trained and evaluated on the Iris dataset.")
+        run_id = save_training_run(
+            dataset_name='Iris',
+            model_type='MLP',
+            layer_sizes=layer_sizes,
+            activation=activation,
+            learning_rate=learning_rate,
+            epochs=epochs,
+            batch_size=batch_size,
+            optimizer='sgd',
+            regularization=None,
+            final_train_accuracy=train_metrics['accuracy'],
+            final_test_accuracy=test_metrics['accuracy'],
+            final_train_loss=history['loss'][-1] if history['loss'] else None,
+            final_test_loss=history['val_loss'][-1] if history['val_loss'] else None,
+            train_loss_history=history['loss'],
+            train_accuracy_history=history['accuracy'],
+            val_loss_history=history['val_loss'],
+            val_accuracy_history=history['val_accuracy'],
+            confusion_matrix=cm,
+            f1_score=test_metrics['f1_macro'],
+            training_time_seconds=None
+        )
+        
+        st.success(f"Training complete! Results saved to database (Run #{run_id}).")
+
+
+def show_training_history():
+    st.header("Training History")
+    
+    st.markdown("""
+    View and analyze your previous training runs stored in the database.
+    Compare different model configurations and their performance.
+    """)
+    
+    history = get_training_history(limit=20)
+    
+    if not history:
+        st.info("No training runs found. Train a model on the Iris dataset to see your history here.")
+        return
+    
+    st.subheader(f"Recent Training Runs ({len(history)} total)")
+    
+    history_df = []
+    for run in history:
+        history_df.append({
+            'ID': run['id'],
+            'Timestamp': run['timestamp'][:19].replace('T', ' '),
+            'Dataset': run['dataset_name'],
+            'Architecture': ' → '.join(map(str, run['layer_sizes'])),
+            'Activation': run['activation'],
+            'LR': f"{run['learning_rate']:.4f}",
+            'Epochs': run['epochs'],
+            'Train Acc': f"{run['final_train_accuracy']:.2%}" if run['final_train_accuracy'] else 'N/A',
+            'Test Acc': f"{run['final_test_accuracy']:.2%}" if run['final_test_accuracy'] else 'N/A',
+            'F1': f"{run['f1_score']:.4f}" if run['f1_score'] else 'N/A'
+        })
+    
+    st.dataframe(history_df, use_container_width=True)
+    
+    st.subheader("View Run Details")
+    
+    run_ids = [run['id'] for run in history]
+    selected_run_id = st.selectbox(
+        "Select a training run to view details:",
+        options=run_ids,
+        format_func=lambda x: f"Run #{x} - {next((r['timestamp'][:19].replace('T', ' ') for r in history if r['id'] == x), '')}"
+    )
+    
+    if selected_run_id:
+        run_details = get_training_run_details(selected_run_id)
+        
+        if run_details:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("### Model Configuration")
+                st.write(f"**Dataset:** {run_details['dataset_name']}")
+                st.write(f"**Model:** {run_details['model_type']}")
+                st.write(f"**Architecture:** {' → '.join(map(str, run_details['layer_sizes']))}")
+                st.write(f"**Activation:** {run_details['activation']}")
+                st.write(f"**Learning Rate:** {run_details['learning_rate']}")
+                st.write(f"**Epochs:** {run_details['epochs']}")
+                st.write(f"**Batch Size:** {run_details['batch_size']}")
+            
+            with col2:
+                st.markdown("### Performance Metrics")
+                if run_details['final_train_accuracy']:
+                    st.metric("Training Accuracy", f"{run_details['final_train_accuracy']:.2%}")
+                if run_details['final_test_accuracy']:
+                    st.metric("Test Accuracy", f"{run_details['final_test_accuracy']:.2%}")
+                if run_details['f1_score']:
+                    st.metric("F1 Score", f"{run_details['f1_score']:.4f}")
+            
+            if run_details['train_loss_history'] and run_details['train_accuracy_history']:
+                st.markdown("### Training Curves")
+                fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+                
+                epochs_range = range(len(run_details['train_loss_history']))
+                
+                axes[0].plot(epochs_range, run_details['train_loss_history'], label='Training Loss')
+                if run_details['val_loss_history']:
+                    axes[0].plot(epochs_range, run_details['val_loss_history'], label='Validation Loss')
+                axes[0].set_title('Loss over Epochs')
+                axes[0].set_xlabel('Epoch')
+                axes[0].set_ylabel('Loss')
+                axes[0].legend()
+                axes[0].grid(True, alpha=0.3)
+                
+                axes[1].plot(epochs_range, run_details['train_accuracy_history'], label='Training Accuracy')
+                if run_details['val_accuracy_history']:
+                    axes[1].plot(epochs_range, run_details['val_accuracy_history'], label='Validation Accuracy')
+                axes[1].set_title('Accuracy over Epochs')
+                axes[1].set_xlabel('Epoch')
+                axes[1].set_ylabel('Accuracy')
+                axes[1].legend()
+                axes[1].grid(True, alpha=0.3)
+                
+                plt.tight_layout()
+                st.pyplot(fig)
+                plt.close()
+            
+            if run_details['confusion_matrix'] is not None:
+                st.markdown("### Confusion Matrix")
+                cm = run_details['confusion_matrix']
+                class_names = ['setosa', 'versicolor', 'virginica']
+                
+                fig, ax = plt.subplots(figsize=(6, 5))
+                im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+                ax.figure.colorbar(im, ax=ax)
+                
+                ax.set(xticks=np.arange(cm.shape[1]),
+                       yticks=np.arange(cm.shape[0]),
+                       xticklabels=class_names,
+                       yticklabels=class_names,
+                       ylabel='True Label',
+                       xlabel='Predicted Label')
+                
+                plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+                
+                thresh = cm.max() / 2.
+                for i in range(cm.shape[0]):
+                    for j in range(cm.shape[1]):
+                        ax.text(j, i, format(int(cm[i, j]), 'd'),
+                                ha="center", va="center",
+                                color="white" if cm[i, j] > thresh else "black")
+                
+                plt.tight_layout()
+                st.pyplot(fig)
+                plt.close()
+            
+            if st.button("Delete This Run", type="secondary"):
+                if delete_training_run(selected_run_id):
+                    st.success(f"Run #{selected_run_id} deleted successfully.")
+                    st.rerun()
+                else:
+                    st.error("Failed to delete the run.")
 
 
 if __name__ == "__main__":

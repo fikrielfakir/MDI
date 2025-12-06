@@ -14,14 +14,14 @@ Contents:
 """
 
 import numpy as np
-from sklearn.datasets import load_iris
+from sklearn.datasets import load_iris, fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
                              f1_score, confusion_matrix, classification_report)
 
 
-def load_iris_dataset(test_size=0.2, random_state=42, normalize=True):
+def load_iris_dataset(test_size=0.2, random_state=42, normalize=True, source='sklearn'):
     """
     Load and preprocess the Iris dataset.
     
@@ -33,7 +33,7 @@ def load_iris_dataset(test_size=0.2, random_state=42, normalize=True):
         - Collected by Edgar Anderson in 1936
     
     Preprocessing Steps:
-        1. Load raw data from scikit-learn
+        1. Load raw data from scikit-learn or database
         2. Split into training (80%) and test (20%) sets
         3. Normalize features using StandardScaler (z-score normalization)
            z = (x - μ) / σ
@@ -42,15 +42,34 @@ def load_iris_dataset(test_size=0.2, random_state=42, normalize=True):
         test_size (float): Proportion of data for testing (default: 0.2)
         random_state (int): Random seed for reproducibility
         normalize (bool): Whether to apply z-score normalization
+        source (str): Data source - 'sklearn' or 'database'
         
     Returns:
         tuple: (X_train, X_test, y_train, y_test, feature_names, class_names)
     """
-    iris = load_iris()
-    X = iris.data
-    y = iris.target
-    feature_names = iris.feature_names
-    class_names = iris.target_names
+    if source == 'database':
+        try:
+            from db_utils import load_iris_from_database, get_iris_sample_count
+            if get_iris_sample_count() > 0:
+                X, y, feature_names, class_names = load_iris_from_database()
+            else:
+                iris = load_iris()
+                X = iris.data
+                y = iris.target
+                feature_names = list(iris.feature_names)
+                class_names = iris.target_names
+        except ImportError:
+            iris = load_iris()
+            X = iris.data
+            y = iris.target
+            feature_names = list(iris.feature_names)
+            class_names = iris.target_names
+    else:
+        iris = load_iris()
+        X = iris.data
+        y = iris.target
+        feature_names = list(iris.feature_names)
+        class_names = iris.target_names
     
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=random_state, stratify=y
