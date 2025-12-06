@@ -873,24 +873,40 @@ def show_mnist_training():
         st.subheader("Sample MNIST Digits")
         
         if 'mnist_samples' not in st.session_state:
-            with st.spinner("Loading MNIST samples..."):
-                X_sample, _, y_sample, _, _ = load_mnist_dataset(n_samples=1000)
-                sample_imgs, sample_labels = get_mnist_sample_images(X_sample, y_sample, n_per_class=2)
-                st.session_state.mnist_samples = (sample_imgs, sample_labels)
+            st.session_state.mnist_samples = None
+            st.session_state.mnist_load_error = None
         
-        sample_imgs, sample_labels = st.session_state.mnist_samples
+        if st.session_state.mnist_samples is None and st.session_state.mnist_load_error is None:
+            if st.button("Load Sample Digits"):
+                try:
+                    with st.spinner("Loading MNIST samples..."):
+                        X_sample, _, y_sample, _, _ = load_mnist_dataset(n_samples=1000)
+                        sample_imgs, sample_labels = get_mnist_sample_images(X_sample, y_sample, n_per_class=2)
+                        st.session_state.mnist_samples = (sample_imgs, sample_labels)
+                        st.rerun()
+                except Exception as e:
+                    st.session_state.mnist_load_error = str(e)
+                    st.rerun()
         
-        fig, axes = plt.subplots(2, 10, figsize=(12, 3))
-        for i in range(20):
-            row = i // 10
-            col = i % 10
-            axes[row, col].imshow(sample_imgs[i], cmap='gray')
-            axes[row, col].axis('off')
-            axes[row, col].set_title(str(sample_labels[i]), fontsize=10)
-        plt.suptitle('Sample Digits from MNIST', fontsize=12)
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close()
+        if st.session_state.mnist_load_error:
+            st.warning(f"Could not load MNIST samples: {st.session_state.mnist_load_error}")
+            st.info("You can still train on MNIST by clicking the 'Train on MNIST' button in the sidebar.")
+        elif st.session_state.mnist_samples:
+            sample_imgs, sample_labels = st.session_state.mnist_samples
+            
+            fig, axes = plt.subplots(2, 10, figsize=(12, 3))
+            for i in range(20):
+                row = i // 10
+                col = i % 10
+                axes[row, col].imshow(sample_imgs[i], cmap='gray')
+                axes[row, col].axis('off')
+                axes[row, col].set_title(str(sample_labels[i]), fontsize=10)
+            plt.suptitle('Sample Digits from MNIST', fontsize=12)
+            plt.tight_layout()
+            st.pyplot(fig)
+            plt.close()
+        else:
+            st.info("Click the button above to load sample MNIST digits.")
     
     with col2:
         st.subheader("Dataset Info")

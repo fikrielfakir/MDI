@@ -109,7 +109,10 @@ def load_mnist_dataset(n_samples=10000, test_size=0.2, random_state=42):
     """
     from sklearn.datasets import fetch_openml
     
-    mnist = fetch_openml('mnist_784', version=1, as_frame=False, parser='auto')
+    try:
+        mnist = fetch_openml('mnist_784', version=1, as_frame=False, parser='auto')
+    except Exception:
+        mnist = fetch_openml('mnist_784', as_frame=False, parser='auto')
     
     X = mnist.data.astype(np.float32)
     y = mnist.target.astype(np.int32)
