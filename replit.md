@@ -15,6 +15,11 @@ The project includes:
   - CSV batch upload (format: Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species)
   - Multi-image upload with measurement input forms
 - **Enhanced educational content** with tabbed explanations of neural network concepts
+- **Image Recognition** - classify iris flowers from photos:
+  - Upload or capture images with camera
+  - Upload reference images for each species (setosa, versicolor, virginica)
+  - Train image classifier using extracted visual features
+  - NumPy-based feature extraction (color histograms, edge detection, shape analysis)
 
 The application is designed to help users understand how neural networks work at a fundamental level by implementing each component from first principles.
 
